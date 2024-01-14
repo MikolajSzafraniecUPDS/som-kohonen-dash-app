@@ -146,7 +146,7 @@ class SelfOrganizingMap:
         # and new value of 'include_alpha_channel' is different from
         # the current one
         if (self.neurons is not None) and (current_val != value):
-            self._init_neurons()
+            self.reset_network()
 
     include_alpha_channel = property(
         _get_alpha_channel_indicator,
@@ -175,6 +175,32 @@ class SelfOrganizingMap:
     neighbourhood_type = property(
         _get_neighbourhood_type,
         _set_neighbourhood_type
+    )
+
+    def _get_size(self) -> int:
+        """
+        Size property getter
+
+        :return: size of the network
+        """
+        res = self._size if hasattr(self, '_size') else None
+        return res
+
+    def _set_size(self, value: int) -> None:
+        """
+        Size property setter. If the value is different from the current one
+        network is reset
+
+        :param value: size of network
+        """
+        current_size = self.size
+        self._size = value
+        if (self.neurons is not None) and (current_size != value):
+            self.reset_network()
+
+    size = property(
+        _get_size,
+        _set_size
     )
 
     def _get_current_neighbourhood_radius(self) -> float:
