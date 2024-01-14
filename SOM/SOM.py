@@ -82,9 +82,9 @@ class SelfOrganizingMap:
             self,
             size: int = 250,
             include_alpha_channel: bool = True,
-            initial_neighbourhood_radius: float = 50.0,
-            initial_learning_rate: float = 1.0,
-            decay_lambda: float = 20,
+            initial_neighbourhood_radius: float = 50,
+            initial_learning_rate: float = 100,
+            decay_lambda: float = 0.1,
             neighbourhood_type: str = "gaussian"
     ):
         """
@@ -214,6 +214,8 @@ class SelfOrganizingMap:
         res = self.initial_neighbourhood_radius*np.exp(
             -self.current_iteration / self.decay_lambda
         )
+        # Metoda z R-a:
+        #res = self.initial_neighbourhood_radius/(np.exp(self.decay_lambda*self.current_iteration))
         return res
 
     def _get_current_learning_rate(self) -> float:
@@ -227,6 +229,8 @@ class SelfOrganizingMap:
         res = self.initial_learning_rate*np.exp(
             -self.current_iteration / self.decay_lambda
         )
+        # Metoda z R-a:
+        #res = self.initial_learning_rate / (np.exp(self.decay_lambda * self.current_iteration))
         return res
 
     @staticmethod
@@ -326,7 +330,7 @@ class SelfOrganizingMap:
         for i in range(number_of_iterations):
             self.train_network_single_iteration()
             logger.info(
-                "Training iteration number {0} passed successfully".format(i)
+                "Training iteration number {0} passed successfully".format(i+1)
             )
 
     def reset_network(self) -> None:
@@ -353,7 +357,7 @@ class SelfOrganizingMap:
 
         return output_array
 
-    def get_network_image(self) -> Image.Image:
+    def to_image(self) -> Image.Image:
         """
         Get Image representing current state of network
 
