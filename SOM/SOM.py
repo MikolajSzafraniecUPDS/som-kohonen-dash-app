@@ -1,4 +1,10 @@
+import os
 import numpy as np
+import logging.config
+from PIL import Image
+
+logging.config.fileConfig(os.path.join("config", "logging.conf"))
+logger = logging.getLogger("consoleLogger")
 
 
 class Neuron:
@@ -33,7 +39,7 @@ class Neuron:
         rgb_vals = np.random.randint(
             low=0, high=255, size=vals_num
         )
-        self.RGB_vals = rgb_vals
+        self.RGB_vals = rgb_vals.astype(np.uint8)
 
     def calc_distance(self, vec: np.ndarray) -> float:
         """
@@ -49,6 +55,26 @@ class Neuron:
         
         return res
 
+    def update_weights(
+            self,
+            input_vector: np.ndarray,
+            learning_rate: float,
+            neighbourhood_value: float
+    ) -> None:
+        """
+        Update neuron's weights (RGB[A]) values) based on learning input
+        vector, current learning rate and neighbourhood value to the BMU.
+
+        :param input_vector: input learning vector
+        :param learning_rate: current learning rate
+        :param neighbourhood_value: neighbourhood value calculated for given neuron
+            and BMU indices
+        """
+        current_weights_input_vec_diff = self.RGB_vals - input_vector
+        new_weights = self.RGB_vals + learning_rate*neighbourhood_value*current_weights_input_vec_diff
+        new_weights = new_weights.astype(np.uint8)
+        self.RGB_vals = new_weights
+
 
 class SelfOrganizingMap:
 
@@ -58,7 +84,8 @@ class SelfOrganizingMap:
             include_alpha_channel: bool = True,
             initial_neighbourhood_radius: float = 50.0,
             initial_learning_rate: float = 1.0,
-            decay_lambda: float = 20
+            decay_lambda: float = 20,
+            neighbourhood_type: str = "gaussian"
     ):
         """
         Create an instance of self organizing map (Kohonen network).
@@ -72,26 +99,29 @@ class SelfOrganizingMap:
         :param decay_lambda: parameter used in the formula decreasing neighbourhood
             radius and learning rate over time. The higher, the slower the
             neighbourhood radius and learning rate decrease
+        :param neighbourhood_type: type of neighbourhood function to use - one
+            of 'gaussian' or 'square'
         """
-        self.neuron_list = None
+        self.neurons = None
         self.size = size
         self.initial_neighbourhood_radius = initial_neighbourhood_radius
         self.initial_learning_rate = initial_learning_rate
         self.include_alpha_channel = include_alpha_channel
         self.decay_lambda = decay_lambda
         self.current_iteration = 0
+        self.neighbourhood_type = neighbourhood_type
         self._init_neurons()
 
     def _init_neurons(self) -> None:
         """
-        Create a list of neurons. They will be initialized with a random
-        RGB(A) values
+        Create a dict containing network's neurons. They will be
+        initialized with a random RGB(A) values
         """
-        neuron_list = [
-            Neuron(i, j, self.include_alpha_channel)
+        neurons = {
+            (i, j): Neuron(i, j, self.include_alpha_channel)
             for i in range(self.size) for j in range(self.size)
-        ]
-        self.neuron_list = neuron_list
+        }
+        self.neurons = neurons
 
     def _get_alpha_channel_indicator(self) -> bool:
         """
@@ -115,12 +145,36 @@ class SelfOrganizingMap:
         # Reinstantiate neurons in case when they were already created
         # and new value of 'include_alpha_channel' is different from
         # the current one
-        if (self.neuron_list is not None) and (current_val != value):
+        if (self.neurons is not None) and (current_val != value):
             self._init_neurons()
 
     include_alpha_channel = property(
         _get_alpha_channel_indicator,
         _set_alpha_channel_indicator
+    )
+
+    def _get_neighbourhood_type(self) -> str:
+        """
+        Getter for 'neighbourhood_type' property
+
+        :return: neighbourhood_type value
+        """
+        return self._neighbourhood_type
+
+    def _set_neighbourhood_type(self, value: str) -> None:
+        """
+        Setter for 'neighbourhood_type' property. It verifies whether
+        proper value is trying to be set.
+
+        :param value: neighbourhood type to set
+        """
+        if value not in ["gaussian", "square"]:
+            raise ValueError("Neighbourhood type must be one of ['gaussian', 'square']")
+        self._neighbourhood_type = value
+
+    neighbourhood_type = property(
+        _get_neighbourhood_type,
+        _set_neighbourhood_type
     )
 
     def _get_current_neighbourhood_radius(self) -> float:
@@ -202,4 +256,83 @@ class SelfOrganizingMap:
         neurons_distance = self._get_neuron_distance(neuron_1, neuron_2)
         neighbourhood_radius = self._get_current_neighbourhood_radius()
         res = 1.0 if neurons_distance <= neighbourhood_radius else 0.0
+        return res
+
+    def _get_bmu(self, input_vector: np.ndarray) -> Neuron:
+        """
+        Get BMU (best matching unit) for given input vector.
+
+        :param input_vector: input learning vector for given iteration
+        :return: BMU neuron
+        """
+        bmu = None
+        current_min = np.Inf
+        for neuron in self.neurons.values():
+            neuron_dist = neuron.calc_distance(input_vector)
+            if neuron_dist < current_min:
+                current_min = neuron_dist
+                bmu = neuron
+
+        return bmu
+
+    def train_network_single_iteration(self) -> None:
+        """
+        Single iteration of network's training.
+        """
+        vals_num = 4 if self.include_alpha_channel else 3
+        input_vector = np.random.randint(
+            low=0, high=255, size=vals_num
+        )
+        bmu = self._get_bmu(input_vector)
+        current_learning_rate = self._get_current_learning_rate()
+        neighbourhood_func = self._gaussian_neighbourhood if self.neighbourhood_type == "gaussian" \
+            else self._square_neighbourhood
+        for neuron in self.neurons.values():
+            neighbourhood_value = neighbourhood_func(bmu, neuron)
+            neuron.update_weights(
+                input_vector=input_vector,
+                learning_rate=current_learning_rate,
+                neighbourhood_value=neighbourhood_value
+            )
+        self.current_iteration += 1
+
+    def train_network(self, number_of_iterations: int) -> None:
+        for i in range(number_of_iterations):
+            self.train_network_single_iteration()
+            logger.info(
+                "Training iteration number {0} passed successfully".format(i)
+            )
+
+    def reset_network(self) -> None:
+        """
+        Reset network (reinitialize neurons, set number of iteration to zero).
+        """
+        self.current_iteration = 0
+        self._init_neurons()
+
+    def _neuron_weights_to_array(self) -> np.ndarray:
+        """
+        Create 3D numpy array and insert neuron weights to it. Array can be
+        transformed rendered as RGB(A) image.
+
+        :return: numpy array containing neurons weights
+        """
+        rgb_num_vals = 4 if self.include_alpha_channel else 3
+        output_array = np.zeros(
+            [self.size, self.size, rgb_num_vals],
+            dtype=np.uint8
+        )
+        for neuron in self.neurons.values():
+            output_array[neuron.idx_y, neuron.idx_x, :] = neuron.RGB_vals
+
+        return output_array
+
+    def get_network_image(self) -> Image.Image:
+        """
+        Get Image representing current state of network
+
+        :return: Image object representing neurons RGB(A) values
+        """
+        network_array = self._neuron_weights_to_array()
+        res = Image.fromarray(network_array)
         return res
