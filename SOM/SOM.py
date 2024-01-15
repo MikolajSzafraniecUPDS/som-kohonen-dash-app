@@ -1,3 +1,10 @@
+"""
+Definitions of neuron and self-organising map. Details about learning parameters
+(learning rate, neighbourhood functions, etc.) can be found in the following
+article: https://ijmo.org/vol6/504-M08.pdf
+"""
+
+
 import os
 import numpy as np
 import logging.config
@@ -70,22 +77,23 @@ class Neuron:
         :param neighbourhood_value: neighbourhood value calculated for given neuron
             and BMU indices
         """
-        current_weights_input_vec_diff = self.RGB_vals - input_vector
-        new_weights = self.RGB_vals + learning_rate*neighbourhood_value*current_weights_input_vec_diff
+        current_weights_input_vec_diff = input_vector-self.RGB_vals
+        new_weights = self.RGB_vals + (learning_rate*neighbourhood_value*current_weights_input_vec_diff)
         new_weights = new_weights.astype(np.uint8)
         self.RGB_vals = new_weights
 
 
 class SelfOrganizingMap:
 
+
     def __init__(
             self,
-            size: int = 250,
+            size: int = 150,
             include_alpha_channel: bool = True,
-            initial_neighbourhood_radius: float = 50,
-            initial_learning_rate: float = 100,
-            decay_lambda: float = 0.1,
-            neighbourhood_type: str = "gaussian"
+            initial_neighbourhood_radius: float = 1,
+            initial_learning_rate: float = 0.5,
+            neighbourhood_type: str = "gaussian",
+            learning_rate_decay_func: str = "inverse_of_time"
     ):
         """
         Create an instance of self organizing map (Kohonen network).
@@ -100,16 +108,26 @@ class SelfOrganizingMap:
             radius and learning rate over time. The higher, the slower the
             neighbourhood radius and learning rate decrease
         :param neighbourhood_type: type of neighbourhood function to use - one
-            of 'gaussian' or 'square'
+            of 'gaussian' or 'bubble'
         """
+        self._LEARNING_RATE_DECAY_FUNCTIONS = {
+            "linear": self._get_learning_rate_linear,
+            "inverse_of_time": self._get_learning_rate_inverse_of_time,
+            "power_series": self._get_learning_rate_power_series
+        }
+        self._NEIGHBOURHOOD_FUNCTIONS = {
+            "gaussian": self._gaussian_neighbourhood,
+            "bubble": self._square_neighbourhood
+        }
         self.neurons = None
         self.size = size
         self.initial_neighbourhood_radius = initial_neighbourhood_radius
         self.initial_learning_rate = initial_learning_rate
         self.include_alpha_channel = include_alpha_channel
-        self.decay_lambda = decay_lambda
-        self.current_iteration = 0
+        self.current_iteration = 1
+        self.number_of_iterations = 200
         self.neighbourhood_type = neighbourhood_type
+        self.learning_rate_decay_func = learning_rate_decay_func
         self._init_neurons()
 
     def _init_neurons(self) -> None:
@@ -168,13 +186,47 @@ class SelfOrganizingMap:
 
         :param value: neighbourhood type to set
         """
-        if value not in ["gaussian", "square"]:
-            raise ValueError("Neighbourhood type must be one of ['gaussian', 'square']")
+        valid_neighbourhood_functions = self._NEIGHBOURHOOD_FUNCTIONS.keys()
+        if value not in valid_neighbourhood_functions:
+            raise ValueError(
+                "Neighbourhood type must be one of {0}".format(
+                    list(valid_neighbourhood_functions)
+                )
+            )
         self._neighbourhood_type = value
 
     neighbourhood_type = property(
         _get_neighbourhood_type,
         _set_neighbourhood_type
+    )
+
+    def _get_learning_rate_decay_func(self) -> str:
+        """
+        Getter for 'learning_rate_decay_func' property
+
+        :return: neighbourhood_type value
+        """
+        return self._learning_rate_decay_func
+
+    def _set_learning_rate_decay_func(self, value: str) -> None:
+        """
+        Setter for 'learning_rate_decay_func' property. It verifies whether
+        proper value is trying to be set.
+
+        :param value: name of learning rate decay function
+        """
+        valid_lr_decay_functions = self._LEARNING_RATE_DECAY_FUNCTIONS.keys()
+        if value not in valid_lr_decay_functions:
+            raise ValueError(
+                "Learning rate decay function must be one of {0}".format(
+                    list(valid_lr_decay_functions)
+                )
+            )
+        self._learning_rate_decay_func = value
+
+    learning_rate_decay_func = property(
+        _get_learning_rate_decay_func,
+        _set_learning_rate_decay_func
     )
 
     def _get_size(self) -> int:
@@ -206,31 +258,56 @@ class SelfOrganizingMap:
     def _get_current_neighbourhood_radius(self) -> float:
         """
         Calculate current value of neighbourhood radius, based on
-        initial value, number of iteration and decay lambda. Formula
-        described in the article: https://towardsdatascience.com/kohonen-self-organizing-maps-a29040d688da
+        initial value, number of current iteration and total number of
+        iterations. Formula described in the article: https://ijmo.org/vol6/504-M08.pdf
 
         :return: current value of neighbourhood radius
         """
         res = self.initial_neighbourhood_radius*np.exp(
-            -self.current_iteration / self.decay_lambda
+            -self.current_iteration / self.number_of_iterations
         )
-        # Metoda z R-a:
-        #res = self.initial_neighbourhood_radius/(np.exp(self.decay_lambda*self.current_iteration))
+        return res
+
+    def _get_learning_rate_linear(self) -> float:
+        """
+        Calculate current value of learning rate using linear
+        decay function. Details in the paper: https://ijmo.org/vol6/504-M08.pdf
+
+        :return: current value of learning rate
+        """
+        res = self.initial_learning_rate * (1/self.current_iteration)
+        return res
+
+    def _get_learning_rate_inverse_of_time(self) -> float:
+        """
+        Calculate current value of learning rate using inverse of
+        time function. Details in the paper: https://ijmo.org/vol6/504-M08.pdf
+
+        :return: current value of learning rate
+        """
+        res = self.initial_learning_rate*(1-(self.current_iteration/self.number_of_iterations))
+        return res
+
+    def _get_learning_rate_power_series(self) -> float:
+        """
+        Calculate current value of learning rate using power series
+        function. Details in the paper: https://ijmo.org/vol6/504-M08.pdf
+
+        :return: current value of learning rate
+        """
+        res = self.initial_learning_rate*np.exp(self.current_iteration/self.number_of_iterations)
         return res
 
     def _get_current_learning_rate(self) -> float:
         """
-        Calculate current value of learning rate, based on
-        initial value, number of iteration and decay lambda.
-        Formula described in the article: https://towardsdatascience.com/kohonen-self-organizing-maps-a29040d688da
+        Calculate current value of learning rate
 
         :return: current value of learning rate
         """
-        res = self.initial_learning_rate*np.exp(
-            -self.current_iteration / self.decay_lambda
+        learning_rate_func = self._LEARNING_RATE_DECAY_FUNCTIONS.get(
+            self.learning_rate_decay_func
         )
-        # Metoda z R-a:
-        #res = self.initial_learning_rate / (np.exp(self.decay_lambda * self.current_iteration))
+        res = learning_rate_func()
         return res
 
     @staticmethod
@@ -315,8 +392,9 @@ class SelfOrganizingMap:
         )
         bmu = self._get_bmu(input_vector)
         current_learning_rate = self._get_current_learning_rate()
-        neighbourhood_func = self._gaussian_neighbourhood if self.neighbourhood_type == "gaussian" \
-            else self._square_neighbourhood
+        neighbourhood_func = self._NEIGHBOURHOOD_FUNCTIONS.get(
+            self.neighbourhood_type
+        )
         for neuron in self.neurons.values():
             neighbourhood_value = neighbourhood_func(bmu, neuron)
             neuron.update_weights(
@@ -327,6 +405,7 @@ class SelfOrganizingMap:
         self.current_iteration += 1
 
     def train_network(self, number_of_iterations: int) -> None:
+        self.number_of_iterations = number_of_iterations
         for i in range(number_of_iterations):
             self.train_network_single_iteration()
             logger.info(
@@ -337,7 +416,7 @@ class SelfOrganizingMap:
         """
         Reset network (reinitialize neurons, set number of iteration to zero).
         """
-        self.current_iteration = 0
+        self.current_iteration = 1
         self._init_neurons()
 
     def _neuron_weights_to_array(self) -> np.ndarray:
