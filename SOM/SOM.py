@@ -90,7 +90,7 @@ class SelfOrganizingMap:
             self,
             size: int = 150,
             include_alpha_channel: bool = True,
-            initial_neighbourhood_radius: float = 1,
+            initial_neighbourhood_radius: float = 0.5,
             initial_learning_rate: float = 0.5,
             neighbourhood_type: str = "gaussian",
             learning_rate_decay_func: str = "inverse_of_time"
@@ -101,9 +101,10 @@ class SelfOrganizingMap:
         :param size: number of neurons per row/column (our network is a square,
             so the actual size will be size x size
         :param include_alpha_channel: should alpha channel be included
-        :param initial_neighbourhood_radius: initial neighbourhood radius - it
-            decreases after each iteration of learning
-        :param initial_learning_rate: initial value of learning rate
+        :param initial_neighbourhood_radius: initial value of neighbourhood parameter
+            as a percentage of network radius - must be in range 0 < inr <= 1
+        :param initial_learning_rate: initial value of learning rate - must be a float
+            in range 0 < lr <= 1
         :param decay_lambda: parameter used in the formula decreasing neighbourhood
             radius and learning rate over time. The higher, the slower the
             neighbourhood radius and learning rate decrease
@@ -255,6 +256,62 @@ class SelfOrganizingMap:
         _set_size
     )
 
+    def _get_initial_neighbourhood_radius(self) -> float:
+        """
+        Get initial neighbourhood factor as a ratio of network
+        radius
+
+        :return: initial neighbourhood radius
+        """
+        return self._initial_neighbourhood_radius_ratio
+
+    def _set_initial_neighbourhood_radius(self, value: float) -> None:
+        """
+        Set initial neighbourhood radius ratio and convert it to
+        actual radius according to the network size. Value must be in
+        range 0 < value <= 1
+
+        :param value: initial neighbourhood radius ratio
+        """
+        if (value <= 0) or (value > 1):
+            raise ValueError(
+                "Initial neighbourhood radius must be in range 0 < value <= 1."
+            )
+        self._initial_neighbourhood_radius_ratio = value
+        self._initial_neighbourhood_radius = int(self.size*value)
+
+    initial_neighbourhood_radius = property(
+        _get_initial_neighbourhood_radius,
+        _set_initial_neighbourhood_radius
+    )
+
+    def _get_initial_learning_rate(self) -> float:
+        """
+        Get initial learning rate
+
+        :return:
+        """
+        return self._initial_learning_rate
+
+    def _set_initial_learning_rate(self, value: float) -> None:
+        """
+        Set initial learning rate. Value must be in range
+        0 < value <= 1
+
+        :param value: initial learning rate to assign
+        """
+        if (value <= 0) or (value > 1):
+            raise ValueError(
+                "Initial learning rate must be in range 0 < value <= 1."
+            )
+        self._initial_learning_rate = value
+
+    initial_learning_rate = property(
+        _get_initial_learning_rate,
+        _set_initial_learning_rate
+    )
+
+
     def _get_current_neighbourhood_radius(self) -> float:
         """
         Calculate current value of neighbourhood radius, based on
@@ -263,7 +320,7 @@ class SelfOrganizingMap:
 
         :return: current value of neighbourhood radius
         """
-        res = self.initial_neighbourhood_radius*np.exp(
+        res = self._initial_neighbourhood_radius*np.exp(
             -self.current_iteration / self.number_of_iterations
         )
         return res
