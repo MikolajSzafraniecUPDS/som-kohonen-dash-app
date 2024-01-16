@@ -9,6 +9,7 @@ import os
 import numpy as np
 import logging.config
 from PIL import Image
+from typing import Tuple
 
 logging.config.fileConfig(os.path.join("config", "logging.conf"))
 logger = logging.getLogger("consoleLogger")
@@ -90,10 +91,12 @@ class SelfOrganizingMap:
             self,
             size: int = 150,
             include_alpha_channel: bool = True,
-            initial_neighbourhood_radius: float = 0.5,
+            initial_neighbourhood_radius: float = 0.1,
             initial_learning_rate: float = 0.5,
             neighbourhood_type: str = "gaussian",
-            learning_rate_decay_func: str = "inverse_of_time"
+            learning_rate_decay_func: str = "inverse_of_time",
+            rgba_low: Tuple[int] = (0, 0, 0, 0),
+            rgba_high: Tuple[int] = (256, 256, 256, 256)
     ):
         """
         Create an instance of self organizing map (Kohonen network).
@@ -105,11 +108,17 @@ class SelfOrganizingMap:
             as a percentage of network radius - must be in range 0 < inr <= 1
         :param initial_learning_rate: initial value of learning rate - must be a float
             in range 0 < lr <= 1
-        :param decay_lambda: parameter used in the formula decreasing neighbourhood
-            radius and learning rate over time. The higher, the slower the
-            neighbourhood radius and learning rate decrease
         :param neighbourhood_type: type of neighbourhood function to use - one
             of 'gaussian' or 'bubble'
+        :param learning_rate_decay_func: type of decay function for learning rate. Possible
+            choices are 'linear', 'inverse_of_time' and 'power_series'. Details in paper
+            https://ijmo.org/vol6/504-M08.pdf
+        :param rgba_low: lower limit of the RGBA values to drawn for each learning iteration.
+            Must be a tuple of length 4 with values in range [0, 255]
+        param: rgba_high: upper limit of the RGBA values to drawn for each learning iteration.
+            Must be a tuple of length 4 with values in range [1, 256] (np.random.randint function
+            uses 'half-open' interval in form [low, high). Details in documentation:
+            https://numpy.org/doc/stable/reference/random/generated/numpy.random.randint.html
         """
         self._LEARNING_RATE_DECAY_FUNCTIONS = {
             "linear": self._get_learning_rate_linear,
@@ -129,6 +138,8 @@ class SelfOrganizingMap:
         self.number_of_iterations = 200
         self.neighbourhood_type = neighbourhood_type
         self.learning_rate_decay_func = learning_rate_decay_func
+        self.rgba_low = rgba_low
+        self.rgba_high = rgba_high
         self._init_neurons()
 
     def _init_neurons(self) -> None:
@@ -311,12 +322,86 @@ class SelfOrganizingMap:
         _set_initial_learning_rate
     )
 
+    def _get_rgba_low(self) -> Tuple[int]:
+        """
+        Getter for 'rgba_low' property
+
+        :return: rgba_low value
+        """
+        return self._rgba_low
+
+    def _set_rgba_low(self, value: Tuple[int]) -> None:
+        """
+        Setter for 'rgba_low' property, validating its length
+        and range of values.
+
+        :param value: value of rgba_low property to set
+        """
+        if len(value) != 4:
+            raise ValueError(
+                "Length of rgba_low tuple must be 4."
+            )
+
+        if not all([lb >= 0 for lb in value]):
+            raise ValueError(
+                "Lower limit of RGBA values must be equal to or higher than 0."
+            )
+
+        if not all([lb < 256 for lb in value]):
+            raise ValueError(
+                "Lower limit of RGBA values must lower than 256."
+            )
+
+        self._rgba_low = value
+
+    rgba_low = property(
+        _get_rgba_low,
+        _set_rgba_low
+    )
+
+    def _get_rgba_high(self) -> Tuple[int]:
+        """
+        Getter for 'rgba_high' property
+
+        :return: rgba_high value
+        """
+        return self._rgba_high
+
+    def _set_rgba_high(self, value: Tuple[int]) -> None:
+        """
+        Setter for 'rgba_high' property, validating its length
+        and range of values.
+
+        :param value: value of rgba_high property to set
+        """
+        if len(value) != 4:
+            raise ValueError(
+                "Length of rgba_high tuple must be 4."
+            )
+
+        if not all([lb > 0 for lb in value]):
+            raise ValueError(
+                "Upper limit of RGBA values must be higher than 0."
+            )
+
+        if not all([lb < 257 for lb in value]):
+            raise ValueError(
+                "Upper limit of RGBA values must lower than 257."
+            )
+
+        self._rgba_high = value
+
+    rgba_high = property(
+        _get_rgba_high,
+        _set_rgba_high
+    )
+
 
     def _get_current_neighbourhood_radius(self) -> float:
         """
         Calculate current value of neighbourhood radius, based on
         initial value, number of current iteration and total number of
-        iterations. Formula described in the article: https://ijmo.org/vol6/504-M08.pdf
+        iterations. Formula described in the paper: https://ijmo.org/vol6/504-M08.pdf
 
         :return: current value of neighbourhood radius
         """
@@ -445,7 +530,9 @@ class SelfOrganizingMap:
         """
         vals_num = 4 if self.include_alpha_channel else 3
         input_vector = np.random.randint(
-            low=0, high=255, size=vals_num
+            low=self.rgba_low[:vals_num],
+            high=self.rgba_high[:vals_num],
+            size=vals_num
         )
         bmu = self._get_bmu(input_vector)
         current_learning_rate = self._get_current_learning_rate()
