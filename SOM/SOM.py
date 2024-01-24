@@ -10,6 +10,7 @@ import numpy as np
 import logging.config
 from PIL import Image
 from typing import Tuple
+from strenum import StrEnum
 
 logging.config.fileConfig(os.path.join("config", "logging.conf"))
 logger = logging.getLogger("consoleLogger")
@@ -84,8 +85,25 @@ class Neuron:
         self.RGB_vals = new_weights
 
 
-class SelfOrganizingMap:
+class NeighbourhoodType(StrEnum):
+    """
+    Available neighbourhood functions
+    """
+    GAUSSIAN = "gaussian"
+    BUBBLE = "bubble"
 
+
+# Available types of learning rate decay function
+class LearningRateDecay(StrEnum):
+    """
+    Available learning rate decay functions
+    """
+    LINEAR = "linear"
+    INVERSE_OF_TIME = "inverse_of_time"
+    POWER_SERIES = "power_series"
+
+
+class SelfOrganizingMap:
 
     def __init__(
             self,
@@ -93,8 +111,8 @@ class SelfOrganizingMap:
             include_alpha_channel: bool = True,
             initial_neighbourhood_radius: float = 0.1,
             initial_learning_rate: float = 0.5,
-            neighbourhood_type: str = "gaussian",
-            learning_rate_decay_func: str = "inverse_of_time",
+            neighbourhood_type: NeighbourhoodType = NeighbourhoodType.GAUSSIAN,
+            learning_rate_decay_func: LearningRateDecay = LearningRateDecay.INVERSE_OF_TIME,
             rgba_low: Tuple[int] = (0, 0, 0, 0),
             rgba_high: Tuple[int] = (256, 256, 256, 256)
     ):
@@ -181,64 +199,6 @@ class SelfOrganizingMap:
     include_alpha_channel = property(
         _get_alpha_channel_indicator,
         _set_alpha_channel_indicator
-    )
-
-    def _get_neighbourhood_type(self) -> str:
-        """
-        Getter for 'neighbourhood_type' property
-
-        :return: neighbourhood_type value
-        """
-        return self._neighbourhood_type
-
-    def _set_neighbourhood_type(self, value: str) -> None:
-        """
-        Setter for 'neighbourhood_type' property. It verifies whether
-        proper value is trying to be set.
-
-        :param value: neighbourhood type to set
-        """
-        valid_neighbourhood_functions = self._NEIGHBOURHOOD_FUNCTIONS.keys()
-        if value not in valid_neighbourhood_functions:
-            raise ValueError(
-                "Neighbourhood type must be one of {0}".format(
-                    list(valid_neighbourhood_functions)
-                )
-            )
-        self._neighbourhood_type = value
-
-    neighbourhood_type = property(
-        _get_neighbourhood_type,
-        _set_neighbourhood_type
-    )
-
-    def _get_learning_rate_decay_func(self) -> str:
-        """
-        Getter for 'learning_rate_decay_func' property
-
-        :return: neighbourhood_type value
-        """
-        return self._learning_rate_decay_func
-
-    def _set_learning_rate_decay_func(self, value: str) -> None:
-        """
-        Setter for 'learning_rate_decay_func' property. It verifies whether
-        proper value is trying to be set.
-
-        :param value: name of learning rate decay function
-        """
-        valid_lr_decay_functions = self._LEARNING_RATE_DECAY_FUNCTIONS.keys()
-        if value not in valid_lr_decay_functions:
-            raise ValueError(
-                "Learning rate decay function must be one of {0}".format(
-                    list(valid_lr_decay_functions)
-                )
-            )
-        self._learning_rate_decay_func = value
-
-    learning_rate_decay_func = property(
-        _get_learning_rate_decay_func,
-        _set_learning_rate_decay_func
     )
 
     def _get_size(self) -> int:
