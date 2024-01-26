@@ -246,7 +246,7 @@ class SelfOrganizingMap:
         """
         if (value <= 0) or (value > 1):
             raise ValueError(
-                "Initial neighbourhood radius must be in range 0 < value <= 1."
+                "Initial neighbourhood radius must be in range 0 < value <= 1"
             )
         self._initial_neighbourhood_radius_ratio = value
         self._initial_neighbourhood_radius = int(self.size*value)
