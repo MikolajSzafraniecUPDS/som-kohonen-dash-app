@@ -12,4 +12,14 @@ def render_som_setup_and_results_div() -> html.Div:
 
     :return: output tab Div
     """
-    
+    res = html.Div([
+        html.Img(
+            id="som-img",
+            style={
+                "display": "block",
+                "margin-left": "auto",
+                "margin-right": "auto",
+                "width": "90%"
+            }
+        )
+    ])
