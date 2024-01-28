@@ -107,7 +107,7 @@ class SelfOrganizingMap:
 
     def __init__(
             self,
-            size: int = 150,
+            size: int = 100,
             include_alpha_channel: bool = True,
             initial_neighbourhood_radius: float = 0.1,
             initial_learning_rate: float = 0.5,
@@ -226,6 +226,23 @@ class SelfOrganizingMap:
         _get_size,
         _set_size
     )
+
+    def resize_and_update_alpha_channel_indicator(
+            self, new_size: int, alpha_channel_ind: bool
+    ) -> None:
+        """
+        In some cases we want to update both size and alpha channel
+        indicator at the same time. To not reset network twice (it
+        would be done if we would assign new size as a first step
+        and new alpha channel indicator as a second step) we can
+        use this method.
+
+        :param new_size: new size of network
+        :param alpha_channel_ind: new alpha channel indicator
+        """
+        self._size = new_size
+        self._include_alpha_channel = alpha_channel_ind
+        self.reset_network()
 
     def _get_initial_neighbourhood_radius(self) -> float:
         """

@@ -62,7 +62,7 @@ def render_tab_content(tab_name: str) -> html.Div:
     :param tab_name: id of tab to show
     """
     if tab_name == "som-setup-and-results":
-        return render_som_setup_and_results_div()
+        return render_som_setup_and_results_div(som)
 
 
 get_callbacks(app, som)
