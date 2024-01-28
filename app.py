@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 from dash import Dash, DiskcacheManager, CeleryManager, Input, Output, html, callback
 from SOM.SOM import SelfOrganizingMap
 from app_components.tabs_components import *
+from app_components.callbacks import get_callbacks
 
 # Set background callback manager (required to dynamically change Outputs during the
 # processing - in our case process of learning the network). More details in documentation:
@@ -41,8 +42,10 @@ app.layout = html.Div([
         children=[
             dbc.Tab(label="SOM setup and results", tab_id="som-setup-and-results")
         ]
-    )
+    ),
+    html.Div(id="output-tab")
 ])
+
 
 # Define a way of updating tabs of dashboard
 @callback(
@@ -58,8 +61,12 @@ def render_tab_content(tab_name: str) -> html.Div:
 
     :param tab_name: id of tab to show
     """
-    if tab_name == "commits-timeline":
-        return render_commits_timeline_div()
+    if tab_name == "som-setup-and-results":
+        return render_som_setup_and_results_div()
+
+
+get_callbacks(app, som)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0")
