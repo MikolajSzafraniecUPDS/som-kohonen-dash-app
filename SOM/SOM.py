@@ -108,7 +108,7 @@ class SelfOrganizingMap:
     def __init__(
             self,
             size: int = 100,
-            include_alpha_channel: bool = True,
+            include_alpha_channel: bool = False,
             initial_neighbourhood_radius: float = 0.1,
             initial_learning_rate: float = 0.5,
             neighbourhood_type: NeighbourhoodType = NeighbourhoodType.GAUSSIAN,
