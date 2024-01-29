@@ -36,12 +36,7 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
     """
 
     @app.callback(
-        [
-            Output("update-network-btn", "disabled", allow_duplicate=True),
-            Output("reset-settings-changes-btn", "disabled", allow_duplicate=True),
-            Output("run-learning-btn", "disabled", allow_duplicate=True),
-            Output("reset-som-btn", "disabled", allow_duplicate=True)
-        ],
+        Output("update-network-btn", "disabled", allow_duplicate=True),
         [
             Input("som-size-slider", "value"),
             Input("include-alpha-channel", "value"),
@@ -49,7 +44,7 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
         ],
         prevent_initial_call=True
     )
-    def learning_updating_buttons_status(
+    def update_button_status(
             som_size: int,
             include_alpha_channel: bool,
             initial_neighbourhood_radius: int
@@ -67,19 +62,14 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
         alpha_channel_same = include_alpha_channel == som.include_alpha_channel
         neighbourhood_radius_same = (initial_neighbourhood_radius/100) == som.initial_neighbourhood_radius
 
-        settings_buttons_disabled = all([size_same, alpha_channel_same, neighbourhood_radius_same])
-        learning_reset_buttons_disabled = not settings_buttons_disabled
+        update_button_disabled = all([size_same, alpha_channel_same, neighbourhood_radius_same])
 
-        return (settings_buttons_disabled, settings_buttons_disabled,
-                learning_reset_buttons_disabled, learning_reset_buttons_disabled)
+        return update_button_disabled
 
     @app.callback(
         [
             Output("som-img", "src", allow_duplicate=True),
             Output("update-network-btn", "disabled", allow_duplicate=True),
-            Output("reset-settings-changes-btn", "disabled", allow_duplicate=True),
-            Output("run-learning-btn", "disabled", allow_duplicate=True),
-            Output("reset-som-btn", "disabled", allow_duplicate=True)
         ],
         inputs=Input("update-network-btn", "n_clicks"),
         state=[
@@ -121,7 +111,25 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
         som.initial_neighbourhood_radius = initial_neighbourhood_radius/100
 
         som_img = generate_som_image(som)
-        return som_img, True, True, False, False
+        return som_img, True
+
+    @app.callback(
+        [
+            Output("reset-settings-changes-btn", "disabled"),
+            Output("run-learning-btn", "disabled"),
+            Output("reset-som-btn", "disabled")
+        ],
+        Input("update-network-btn", "disabled")
+    )
+    def buttons_disabled_enabled(update_network_btn_disabled: bool):
+        """
+        Change status of buttons 'disabled' property
+
+        :param update_network_btn_disabled: is 'update-network-btn' disabled
+        """
+        reset_settings_disabled = update_network_btn_disabled
+        learn_reset_network_btns_disabled = not update_network_btn_disabled
+        return reset_settings_disabled, learn_reset_network_btns_disabled, learn_reset_network_btns_disabled
 
     @app.callback(
         [
