@@ -26,7 +26,7 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                             "display": "block",
                             "margin-left": "auto",
                             "margin-right": "auto",
-                            "width": "90%",
+                            "width": "80%",
                             "image-rendering": "pixelated"
                         },
                         src=generate_som_image(som)
@@ -59,25 +59,31 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                 ],
                     justify="center", align="center"
                 ),
+                html.Br(),
                 dbc.Row([
-                    dbc.Col([
+                    html.Div([
                         dbc.Button(
                             "Run learning",
                             id="run-learning-btn",
                             color="success",
                             className="me-1",
                             disabled=False
-                        )
-                    ]),
-                    dbc.Col([
+                        ),
                         dbc.Button(
                             "Reset network",
                             id="reset-som-btn",
                             color="danger",
                             className="me-1"
                         )
-                    ])
-                ])
+                    ],
+                        style={
+                            'width': '75%',
+                        }
+                    )
+                ],
+                    justify="center",
+                    align="center"
+                )
             ]),
             dbc.Col([
                 html.H2("SOM parameters"),
@@ -117,13 +123,39 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                     id="include-alpha-channel"
                 ),
                 html.Br(),
-                dbc.Button(
-                    "Update network",
-                    id="update-network-btn",
-                    color="primary",
-                    className="me-1",
-                    disabled=True
-                )
+                dbc.Label("Initial neighbourhood radius"),
+                dcc.Slider(
+                    min=1,
+                    max=100,
+                    step=1,
+                    value=10,
+                    id="initial-neighbourhood-radius",
+                    tooltip={
+                        "placement": "bottom",
+                        "always_visible": True
+                    },
+                    marks={
+                        i: {'label': "{0}%".format(i)}
+                        for i in [1, 5, 10, 25, 50, 75, 100]
+                    }
+                ),
+                html.Br(),
+                html.Div([
+                    dbc.Button(
+                        "Update network",
+                        id="update-network-btn",
+                        color="primary",
+                        className="me-1",
+                        disabled=True
+                    ),
+                    dbc.Button(
+                        "Reset settings changes",
+                        id="reset-settings-changes-btn",
+                        color="danger",
+                        className="me-1",
+                        disabled=True
+                    )
+                ])
             ])
         ])
     ])
