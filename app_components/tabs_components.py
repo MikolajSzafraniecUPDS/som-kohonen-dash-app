@@ -5,7 +5,7 @@ Definitions of components for each tab of the dashboard.
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 from app_components.callbacks import generate_som_image
-from SOM.SOM import SelfOrganizingMap
+from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
 
 
 def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
@@ -139,6 +139,46 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                         for i in [1, 5, 10, 25, 50, 75, 100]
                     }
                 ),
+                html.Br(),
+                dbc.Label("Initial learning rate"),
+                dcc.Slider(
+                    min=0.01,
+                    max=1.00,
+                    step=0.01,
+                    value=0.5,
+                    id="initial-learning-rate",
+                    tooltip={
+                        "placement": "bottom",
+                        "always_visible": True
+                    },
+                    marks={
+                        i: {'label': "{0}".format(i)}
+                        for i in [
+                            0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1
+                        ]
+                    }
+                ),
+                html.Br(),
+                html.Div([
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Label("Neighbourhood type"),
+                            dbc.Select(
+                                [option.value for option in NeighbourhoodType],
+                                value="Gaussian",
+                                id="neighbourhood-type"
+                            )
+                        ]),
+                        dbc.Col([
+                            dbc.Label("Decay function for learning rate"),
+                            dbc.Select(
+                                [option.value for option in LearningRateDecay],
+                                value="Inverse of time",
+                                id="learning-rate-decay-func"
+                            )
+                        ])
+                    ])
+                ], style={"width": "60%"}),
                 html.Br(),
                 html.Div([
                     dbc.Button(

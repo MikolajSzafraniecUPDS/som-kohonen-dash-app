@@ -89,8 +89,8 @@ class NeighbourhoodType(StrEnum):
     """
     Available neighbourhood functions
     """
-    GAUSSIAN = "gaussian"
-    BUBBLE = "bubble"
+    GAUSSIAN = "Gaussian"
+    BUBBLE = "Bubble"
 
 
 # Available types of learning rate decay function
@@ -98,9 +98,9 @@ class LearningRateDecay(StrEnum):
     """
     Available learning rate decay functions
     """
-    LINEAR = "linear"
-    INVERSE_OF_TIME = "inverse_of_time"
-    POWER_SERIES = "power_series"
+    LINEAR = "Linear"
+    INVERSE_OF_TIME = "Inverse of time"
+    POWER_SERIES = "Power series"
 
 
 class SelfOrganizingMap:
@@ -127,9 +127,9 @@ class SelfOrganizingMap:
         :param initial_learning_rate: initial value of learning rate - must be a float
             in range 0 < lr <= 1
         :param neighbourhood_type: type of neighbourhood function to use - one
-            of 'gaussian' or 'bubble'
+            of 'Gaussian' or 'Bubble'
         :param learning_rate_decay_func: type of decay function for learning rate. Possible
-            choices are 'linear', 'inverse_of_time' and 'power_series'. Details in paper
+            choices are 'Linear', 'Inverse of time' and 'Power series'. Details in paper
             https://ijmo.org/vol6/504-M08.pdf
         :param rgba_low: lower limit of the RGBA values to drawn for each learning iteration.
             Must be a tuple of length 4 with values in range [0, 255]
@@ -139,13 +139,13 @@ class SelfOrganizingMap:
             https://numpy.org/doc/stable/reference/random/generated/numpy.random.randint.html
         """
         self._LEARNING_RATE_DECAY_FUNCTIONS = {
-            "linear": self._get_learning_rate_linear,
-            "inverse_of_time": self._get_learning_rate_inverse_of_time,
-            "power_series": self._get_learning_rate_power_series
+            "Linear": self._get_learning_rate_linear,
+            "Inverse of time": self._get_learning_rate_inverse_of_time,
+            "Power series": self._get_learning_rate_power_series
         }
         self._NEIGHBOURHOOD_FUNCTIONS = {
-            "gaussian": self._gaussian_neighbourhood,
-            "bubble": self._square_neighbourhood
+            "Gaussian": self._gaussian_neighbourhood,
+            "Bubble": self._square_neighbourhood
         }
         self.neurons = None
         self.size = size
