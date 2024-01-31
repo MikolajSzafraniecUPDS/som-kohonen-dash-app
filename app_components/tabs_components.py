@@ -3,6 +3,7 @@ Definitions of components for each tab of the dashboard.
 """
 
 import dash_bootstrap_components as dbc
+import dash_loading_spinners as dls
 from dash import dcc, html
 from app_components.callbacks import generate_som_image
 from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
@@ -20,16 +21,21 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
         dbc.Row([
             dbc.Col([
                 dbc.Row([
-                    html.Img(
-                        id="som-img",
-                        style={
-                            "display": "block",
-                            "margin-left": "auto",
-                            "margin-right": "auto",
-                            "width": "80%",
-                            "image-rendering": "pixelated"
-                        },
-                        src=generate_som_image(som)
+                    dls.Hash(
+                        html.Img(
+                            id="som-img",
+                            style={
+                                "display": "block",
+                                "margin-left": "auto",
+                                "margin-right": "auto",
+                                "width": "80%",
+                                "image-rendering": "pixelated"
+                            },
+                            src=generate_som_image(som)
+                        ),
+                        color="#435278",
+                        speed_multiplier=2,
+                        size=100
                     ),
                     html.Br(),
                     html.Div(

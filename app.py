@@ -28,7 +28,8 @@ external_stylesheets = [dbc.themes.DARKLY]
 app = Dash(
     "som_rgb_example",
     external_stylesheets=external_stylesheets,
-    suppress_callback_exceptions=True  # We generate tab content dynamically, so this flag must be set as True
+    suppress_callback_exceptions=True,  # We generate tab content dynamically, so this flag must be set as True
+    background_callback_manager=background_callback_manager
 )
 
 # Initialize instance of Self-Organising map

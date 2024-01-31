@@ -10,6 +10,7 @@ from dash.dash import Dash
 from dash import Input, Output, State
 from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
 from io import BytesIO
+import time
 
 
 def generate_som_image(som: SelfOrganizingMap) -> str:
@@ -86,7 +87,7 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
     @app.callback(
         [
             Output("som-img", "src", allow_duplicate=True),
-            Output("update-network-btn", "disabled", allow_duplicate=True),
+            Output("update-network-btn", "disabled", allow_duplicate=True)
         ],
         inputs=Input("update-network-btn", "n_clicks"),
         state=[
@@ -97,6 +98,10 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
             State("neighbourhood-type", "value"),
             State("learning-rate-decay-func", "value")
         ],
+        # background=True,
+        # running=[
+        #     (Output("update-network-btn", "disabled"), True, True)
+        # ],
         prevent_initial_call=True
     )
     def update_network(
@@ -207,4 +212,3 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
         som.reset_network()
         som_img = generate_som_image(som)
         return som_img
-
