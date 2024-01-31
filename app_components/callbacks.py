@@ -229,18 +229,18 @@ def get_callbacks(app: Dash) -> None:
         som_img = generate_som_image(som)
         return som_img
 
-    # @app.callback(
-    #     Output("app-closed", "children"),
-    #     inputs=Input("clear_cache_btn", "n_clicks"),
-    #     state=State("session-id", "children"),
-    #     prevent_initial_call=True
-    # )
-    # def clear_cache(n_clicks: int, session_id: str):
-    #     """
-    #     Remove som object from cache when session is ended
-    #
-    #     :param n_clicks: how many times reset button was clicked
-    #     :param session_id: id of current session
-    #     """
-    #     rm_som_from_cache(session_id)
-    #     return "File removed"
+    @app.callback(
+        Output("app-closed", "children"),
+        inputs=Input("clear_cache_btn", "n_clicks"),
+        state=State("session-id", "children"),
+        prevent_initial_call=True
+    )
+    def clear_cache(n_clicks: int, session_id: str):
+        """
+        Remove som object from cache when session is ended
+
+        :param n_clicks: how many times reset button was clicked
+        :param session_id: id of current session
+        """
+        rm_som_from_cache(session_id)
+        return "File removed"

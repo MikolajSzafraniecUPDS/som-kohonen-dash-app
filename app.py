@@ -35,6 +35,7 @@ app = Dash(
 
 def serve_layout():
     session_id = str(uuid.uuid4())
+
     res = html.Div([
         html.Div(session_id, id="session-id"),
         dbc.Tabs(
@@ -45,10 +46,10 @@ def serve_layout():
             ]
         ),
         html.Div(id="output-tab"),
-        # html.Div([
-        #     html.Button(id="clear_cache_btn"),
-        #     html.Div(id="app-closed")
-        # ], style={"display": "none"})
+        html.Div([
+            dbc.Button(id="clear_cache_btn"),
+            html.Div(id="app-closed")
+        ], style={"display": "none"})
     ])
 
     som = SelfOrganizingMap()
