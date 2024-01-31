@@ -10,7 +10,7 @@ from dash.dash import Dash
 from dash import Input, Output, State
 from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
 from io import BytesIO
-import time
+from app_components.utils import get_som_from_cache, write_som_to_cache, rm_som_from_cache
 
 
 def generate_som_image(som: SelfOrganizingMap) -> str:
@@ -28,7 +28,7 @@ def generate_som_image(som: SelfOrganizingMap) -> str:
     return im_encoded
 
 
-def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
+def get_callbacks(app: Dash) -> None:
     """
     Definitions of callback functions for the Dash application
 
@@ -38,7 +38,7 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
 
     @app.callback(
         Output("update-network-btn", "disabled", allow_duplicate=True),
-        [
+        inputs=[
             Input("som-size-slider", "value"),
             Input("include-alpha-channel", "value"),
             Input("initial-neighbourhood-radius", "value"),
@@ -46,6 +46,7 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
             Input("neighbourhood-type", "value"),
             Input("learning-rate-decay-func", "value")
         ],
+        state=State("session-id", "children"),
         prevent_initial_call=True
     )
     def update_button_status(
@@ -54,7 +55,8 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
             initial_neighbourhood_radius: int,
             initial_learning_rate: float,
             neighbourhood_type: str,
-            learning_rate_decay_func: str
+            learning_rate_decay_func: str,
+            session_id: str
     ):
         """
         Check whether are there any changes in som parameters and
@@ -69,7 +71,9 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
             of 'Gaussian' or 'Bubble'
         :param learning_rate_decay_func: type of decay function for learning rate. Possible
             choices are 'Linear', 'Inverse of time' and 'Power series'.
+        :param session_id: id of current session
         """
+        som = get_som_from_cache(session_id)
         size_same = som_size == som.size
         alpha_channel_same = include_alpha_channel == som.include_alpha_channel
         neighbourhood_radius_same = (initial_neighbourhood_radius/100) == som.initial_neighbourhood_radius
@@ -96,11 +100,12 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
             State("initial-neighbourhood-radius", "value"),
             State("initial-learning-rate", "value"),
             State("neighbourhood-type", "value"),
-            State("learning-rate-decay-func", "value")
+            State("learning-rate-decay-func", "value"),
+            State("session-id", "children")
         ],
         # background=True,
         # running=[
-        #     (Output("update-network-btn", "disabled"), True, True)
+        #     (Output("update-network-btn", "disabled", allow_duplicate=True), True, True)
         # ],
         prevent_initial_call=True
     )
@@ -111,7 +116,8 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
             initial_neighbourhood_radius: int,
             initial_learning_rate: float,
             neighbourhood_type: str,
-            learning_rate_decay_func: str
+            learning_rate_decay_func: str,
+            session_id: str
     ):
         """
         Update network and print its image representation in app
@@ -127,7 +133,9 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
             of 'Gaussian' or 'Bubble'
         :param learning_rate_decay_func: type of decay function for learning rate. Possible
             choices are 'Linear', 'Inverse of time' and 'Power series'.
+        :param session_id: id of current session
         """
+        som = get_som_from_cache(session_id)
         current_size = som.size
         current_alpha_channel_indicator = som.include_alpha_channel
 
@@ -147,7 +155,8 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
         som.learning_rate_decay_func = LearningRateDecay(learning_rate_decay_func)
 
         som_img = generate_som_image(som)
-        return som_img, True
+        write_som_to_cache(session_id, som)
+        return som_img,
 
     @app.callback(
         [
@@ -177,15 +186,18 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
             Output("learning-rate-decay-func", "value"),
             Output("update-network-btn", "disabled", allow_duplicate=True)
         ],
-        Input("reset-settings-changes-btn", "n_clicks"),
+        inputs=Input("reset-settings-changes-btn", "n_clicks"),
+        state=State("session-id", "children"),
         prevent_initial_call=True
     )
-    def reset_settings_changes(n_clicks: int):
+    def reset_settings_changes(n_clicks: int, session_id: str):
         """
         Reset changes of network settings
 
         :param n_clicks: how many times reset button was clicked
+        :param session_id: id of current session
         """
+        som = get_som_from_cache(session_id)
         som_size = som.size
         som_alpha_channel_indicator = som.include_alpha_channel
         som_initial_neighbourhood_radius = som.initial_neighbourhood_radius*100
@@ -200,15 +212,34 @@ def get_callbacks(app: Dash, som: SelfOrganizingMap) -> None:
 
     @app.callback(
         Output("som-img", "src", allow_duplicate=True),
-        Input("reset-som-btn", "n_clicks"),
+        inputs=Input("reset-som-btn", "n_clicks"),
+        state=State("session-id", "children"),
         prevent_initial_call=True
     )
-    def reset_network(n_clicks: int):
+    def reset_network(n_clicks: int, session_id: str):
         """
         Reset network after learning procedure
 
         :param n_clicks: how many times reset button was clicked
+        :param session_id: id of current session
         """
+        som = get_som_from_cache(session_id)
         som.reset_network()
+        write_som_to_cache(session_id, som)
         som_img = generate_som_image(som)
         return som_img
+
+    # @app.callback(
+    #     Output("app-closed", "children"),
+    #     inputs=Input("clear_cache_btn", "n_clicks"),
+    #     state=State("session-id", "children")
+    # )
+    # def clear_cache(n_clicks: int, session_id: str):
+    #     """
+    #     Remove som object from cache when session is ended
+    #
+    #     :param n_clicks: how many times reset button was clicked
+    #     :param session_id: id of current session
+    #     """
+    #     rm_som_from_cache(session_id)
+    #     return "File removed"
