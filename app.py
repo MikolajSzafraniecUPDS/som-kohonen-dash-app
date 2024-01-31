@@ -44,7 +44,7 @@ def serve_layout():
                 dbc.Tab(label="SOM setup and results", tab_id="som-setup-and-results")
             ]
         ),
-        html.Div(id="output-tab")
+        html.Div(id="output-tab"),
         # html.Div([
         #     html.Button(id="clear_cache_btn"),
         #     html.Div(id="app-closed")

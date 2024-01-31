@@ -156,7 +156,7 @@ def get_callbacks(app: Dash) -> None:
 
         som_img = generate_som_image(som)
         write_som_to_cache(session_id, som)
-        return som_img,
+        return som_img, True
 
     @app.callback(
         [
@@ -232,7 +232,8 @@ def get_callbacks(app: Dash) -> None:
     # @app.callback(
     #     Output("app-closed", "children"),
     #     inputs=Input("clear_cache_btn", "n_clicks"),
-    #     state=State("session-id", "children")
+    #     state=State("session-id", "children"),
+    #     prevent_initial_call=True
     # )
     # def clear_cache(n_clicks: int, session_id: str):
     #     """
