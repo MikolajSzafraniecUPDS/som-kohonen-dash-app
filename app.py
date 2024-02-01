@@ -7,7 +7,7 @@ import uuid
 from dash import Dash, DiskcacheManager, CeleryManager, Input, Output, State
 from app_components.tabs_components import *
 from app_components.callbacks import get_callbacks
-from app_components.utils import CACHE_DIR, write_som_to_cache, get_som_from_cache
+from app_components.utils import CACHE_DIR, store_som_in_cache, get_som_from_cache
 
 # Set background callback manager (required to dynamically change Outputs during the
 # processing - in our case process of learning the network). More details in documentation:
@@ -53,7 +53,7 @@ def serve_layout():
     ])
 
     som = SelfOrganizingMap()
-    write_som_to_cache(session_id, som)
+    store_som_in_cache(session_id, som)
 
     return res
 

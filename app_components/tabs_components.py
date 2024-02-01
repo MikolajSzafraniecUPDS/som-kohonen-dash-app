@@ -18,6 +18,7 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
     :return: output tab Div
     """
     res = html.Div([
+        html.Br(),
         dbc.Row([
             dbc.Col([
                 dbc.Row([
@@ -39,24 +40,37 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                     ),
                     html.Br(),
                     html.Div(
-                        [
-                            dbc.Label("Number of learning iterations", align='center', width='50%'),
-                            dcc.Slider(
-                                min=1,
-                                max=500,
-                                step=1,
-                                value=50,
-                                id="number-of-iterations-learning",
-                                tooltip={
-                                    "placement": "bottom",
-                                    "always_visible": True
-                                },
-                                marks={
-                                    i: "{}".format(i)
-                                    for i in [1, 25, 50, 100, 200, 300, 400, 500]
-                                }
-                            )
-                        ],
+                        dbc.Row([
+                            dbc.Col(
+                                [
+                                    dbc.Label("Number of learning iterations", align='center', width='50%'),
+                                    dcc.Slider(
+                                        min=1,
+                                        max=500,
+                                        step=1,
+                                        value=50,
+                                        id="number-of-iterations-learning",
+                                        tooltip={
+                                            "placement": "bottom",
+                                            "always_visible": True
+                                        },
+                                        marks={
+                                            i: "{}".format(i)
+                                            for i in [1, 25, 50, 100, 200, 300, 400, 500]
+                                        }
+                                    )
+                                ],
+                                width=9
+                            ),
+                            dbc.Col([
+                                dbc.Label("Refresh rate:"),
+                                dbc.Select(
+                                    [i+1 for i in range(20)],
+                                    value=5,
+                                    id="img-refresh-frequency"
+                                )
+                            ]),
+                        ]),
                         style={
                             'width': '80%',
                             'text-align': 'center'
@@ -78,8 +92,21 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                         dbc.Button(
                             "Reset network",
                             id="reset-som-btn",
-                            color="danger",
+                            color="warning",
                             className="me-1"
+                        ),
+                        dbc.Button(
+                            "Stop learning",
+                            id="stop-learning-btn",
+                            color="danger",
+                            className="me-1",
+                            disabled=True
+                        ),
+                        html.Div([
+                            dbc.Progress(value=0, id="learning-progress-bar")
+                        ],
+                            style={"visibility": "hidden"},
+                            id="learning-progress-div"
                         )
                     ],
                         style={

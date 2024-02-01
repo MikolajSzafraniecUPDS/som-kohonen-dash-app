@@ -10,7 +10,7 @@ from dash.dash import Dash
 from dash import Input, Output, State
 from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
 from io import BytesIO
-from app_components.utils import get_som_from_cache, write_som_to_cache, rm_som_from_cache
+from app_components.utils import get_som_from_cache, store_som_in_cache, rm_som_from_cache
 
 
 def generate_som_image(som: SelfOrganizingMap) -> str:
@@ -155,7 +155,7 @@ def get_callbacks(app: Dash) -> None:
         som.learning_rate_decay_func = LearningRateDecay(learning_rate_decay_func)
 
         som_img = generate_som_image(som)
-        write_som_to_cache(session_id, som)
+        store_som_in_cache(session_id, som)
         return som_img, True
 
     @app.callback(
@@ -225,7 +225,7 @@ def get_callbacks(app: Dash) -> None:
         """
         som = get_som_from_cache(session_id)
         som.reset_network()
-        write_som_to_cache(session_id, som)
+        store_som_in_cache(session_id, som)
         som_img = generate_som_image(som)
         return som_img
 
@@ -244,3 +244,63 @@ def get_callbacks(app: Dash) -> None:
         """
         rm_som_from_cache(session_id)
         return "File removed"
+
+    @app.callback(
+        Output("learning-progress-bar", "value"),
+        inputs=Input("run-learning-btn", "n_clicks"),
+        background=True,
+        state=[
+            State("session-id", "children"),
+            State("number-of-iterations-learning", "value"),
+            State("img-refresh-frequency", "value")
+        ],
+        running=[
+            (Output("run-learning-btn", "disabled"), True, False),
+            (Output("reset-som-btn", "disabled"), True, False),
+            (Output("stop-learning-btn", "disabled"), False, True),
+            (
+                Output("learning-progress-div","style"),
+                {"visibility": "visible"},
+                {"visibility": "hidden"}
+            )
+        ],
+        cancel=Input("stop-learning-btn", "n_clicks"),
+        progress=[
+            Output("learning-progress-bar", "value"),
+            Output("learning-progress-bar", "label"),
+            Output("som-img", "src", allow_duplicate=True)
+        ],
+        prevent_initial_call=True
+    )
+    def learn_network(
+            set_progress,
+            n_clicks: int,
+            session_id: str,
+            number_of_iterations: int,
+            img_refresh_rate: int
+    ):
+        """
+        Train network using provided settings. During learning image
+        will be refreshed according to specified refresh rate.
+
+        :param set_progress: callable - progress output
+        :param n_clicks: how many times button was clicked
+        :param session_id: id of user's session
+        :param number_of_iterations: number of learning iterations
+        :param img_refresh_rate: refresh rate of image
+        """
+        som = get_som_from_cache(session_id)
+        som_img = generate_som_image(som)
+        number_of_iterations = int(number_of_iterations)
+        img_refresh_rate = int(img_refresh_rate)
+        for i in range(number_of_iterations):
+            som.train_network_single_iteration()
+            progress_perc = int(((i+1)/number_of_iterations)*100)
+            progress_label = "{0}%".format(progress_perc)
+            if ((i+1) % img_refresh_rate) == 0:
+                som_img = generate_som_image(som)
+                set_progress((str(progress_perc), progress_label, som_img))
+            else:
+                set_progress((str(progress_perc), progress_label, som_img))
+
+        return 0
