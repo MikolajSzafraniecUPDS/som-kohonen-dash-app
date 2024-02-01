@@ -259,7 +259,7 @@ def get_callbacks(app: Dash) -> None:
             (Output("reset-som-btn", "disabled"), True, False),
             (Output("stop-learning-btn", "disabled"), False, True),
             (
-                Output("learning-progress-div","style"),
+                Output("learning-progress-bar","style"),
                 {"visibility": "visible"},
                 {"visibility": "hidden"}
             )
@@ -297,6 +297,9 @@ def get_callbacks(app: Dash) -> None:
             som.train_network_single_iteration()
             progress_perc = int(((i+1)/number_of_iterations)*100)
             progress_label = "{0}%".format(progress_perc)
+            # We need to save network to cache on each iteration - otherwise
+            # we would lose training results when cancelling the learning process
+            store_som_in_cache(session_id, som)
             if ((i+1) % img_refresh_rate) == 0:
                 som_img = generate_som_image(som)
                 set_progress((str(progress_perc), progress_label, som_img))

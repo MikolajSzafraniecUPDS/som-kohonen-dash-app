@@ -81,38 +81,38 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                 ),
                 html.Br(),
                 dbc.Row([
-                    html.Div([
-                        dbc.Button(
-                            "Run learning",
-                            id="run-learning-btn",
-                            color="success",
-                            className="me-1",
-                            disabled=False
-                        ),
-                        dbc.Button(
-                            "Reset network",
-                            id="reset-som-btn",
-                            color="warning",
-                            className="me-1"
-                        ),
-                        dbc.Button(
-                            "Stop learning",
-                            id="stop-learning-btn",
-                            color="danger",
-                            className="me-1",
-                            disabled=True
-                        ),
+                    dbc.Col([
                         html.Div([
-                            dbc.Progress(value=0, id="learning-progress-bar")
-                        ],
-                            style={"visibility": "hidden"},
-                            id="learning-progress-div"
-                        )
-                    ],
-                        style={
-                            'width': '75%',
-                        }
-                    )
+                            dbc.Button(
+                                "Run learning",
+                                id="run-learning-btn",
+                                color="success",
+                                className="me-1",
+                                disabled=False
+                            ),
+                            dbc.Button(
+                                "Reset network",
+                                id="reset-som-btn",
+                                color="warning",
+                                className="me-1"
+                            ),
+                            dbc.Button(
+                                "Stop learning",
+                                id="stop-learning-btn",
+                                color="danger",
+                                className="me-1",
+                                disabled=True
+                            )
+                        ])
+                    ]),
+                    dbc.Col([
+                        html.Div([
+                            dbc.Progress(
+                                value=0, id="learning-progress-bar",
+                                style={"visibility": "hidden"}
+                            )
+                        ])
+                    ])
                 ],
                     justify="center",
                     align="center"
