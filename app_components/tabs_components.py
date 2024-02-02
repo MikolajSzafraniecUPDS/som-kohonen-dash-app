@@ -5,7 +5,7 @@ Definitions of components for each tab of the dashboard.
 import dash_bootstrap_components as dbc
 import dash_loading_spinners as dls
 from dash import dcc, html
-from app_components.callbacks import generate_som_image
+from app_components.callbacks import generate_som_image, ALPHA_CHANNEL_OPTIONS_ENABLED
 from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
 
 
@@ -45,7 +45,7 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                                 [
                                     dbc.Label("Number of learning iterations", align='center', width='50%'),
                                     dcc.Slider(
-                                        min=1,
+                                        min=2,
                                         max=500,
                                         step=1,
                                         value=50,
@@ -155,10 +155,7 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                 html.Br(),
                 dbc.Label("Include alpha channel"),
                 dbc.RadioItems(
-                    options=[
-                        {"label": "True", "value": True},
-                        {"label": "False", "value": False},
-                    ],
+                    options=ALPHA_CHANNEL_OPTIONS_ENABLED,
                     value=False,
                     id="include-alpha-channel"
                 ),

@@ -5,12 +5,23 @@ in this file.
 """
 
 import base64
+import time
 
 from dash.dash import Dash
 from dash import Input, Output, State
 from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
 from io import BytesIO
 from app_components.utils import get_som_from_cache, store_som_in_cache, rm_som_from_cache
+
+ALPHA_CHANNEL_OPTIONS_ENABLED = [
+    {"label": "True", "value": True},
+    {"label": "False", "value": False},
+]
+
+ALPHA_CHANNEL_OPTIONS_DISABLED = [
+    {"label": "True", "value": True, "disabled": True},
+    {"label": "False", "value": False, "disabled": True},
+]
 
 
 def generate_som_image(som: SelfOrganizingMap) -> str:
@@ -73,6 +84,7 @@ def get_callbacks(app: Dash) -> None:
             choices are 'Linear', 'Inverse of time' and 'Power series'.
         :param session_id: id of current session
         """
+        print("Launched update_button_status callback")
         som = get_som_from_cache(session_id)
         size_same = som_size == som.size
         alpha_channel_same = include_alpha_channel == som.include_alpha_channel
@@ -135,6 +147,7 @@ def get_callbacks(app: Dash) -> None:
             choices are 'Linear', 'Inverse of time' and 'Power series'.
         :param session_id: id of current session
         """
+        print("Launched update_network callback")
         som = get_som_from_cache(session_id)
         current_size = som.size
         current_alpha_channel_indicator = som.include_alpha_channel
@@ -172,6 +185,7 @@ def get_callbacks(app: Dash) -> None:
 
         :param update_network_btn_disabled: is 'update-network-btn' disabled
         """
+        print("Launched buttons_disabled_enabled callback")
         reset_settings_disabled = update_network_btn_disabled
         learn_reset_network_btns_disabled = not update_network_btn_disabled
         return reset_settings_disabled, learn_reset_network_btns_disabled, learn_reset_network_btns_disabled
@@ -197,6 +211,7 @@ def get_callbacks(app: Dash) -> None:
         :param n_clicks: how many times reset button was clicked
         :param session_id: id of current session
         """
+        print("Launched reset_settings_changes callback")
         som = get_som_from_cache(session_id)
         som_size = som.size
         som_alpha_channel_indicator = som.include_alpha_channel
@@ -223,6 +238,7 @@ def get_callbacks(app: Dash) -> None:
         :param n_clicks: how many times reset button was clicked
         :param session_id: id of current session
         """
+        print("Launched reset_network callback")
         som = get_som_from_cache(session_id)
         som.reset_network()
         store_som_in_cache(session_id, som)
@@ -242,6 +258,7 @@ def get_callbacks(app: Dash) -> None:
         :param n_clicks: how many times reset button was clicked
         :param session_id: id of current session
         """
+        print("Launched clear_cache callback")
         rm_som_from_cache(session_id)
         return "File removed"
 
@@ -262,7 +279,17 @@ def get_callbacks(app: Dash) -> None:
                 Output("learning-progress-bar","style"),
                 {"visibility": "visible"},
                 {"visibility": "hidden"}
-            )
+            ),
+            (Output("som-size-slider", "disabled"), True, False),
+            (
+                    Output("include-alpha-channel", "options"),
+                    ALPHA_CHANNEL_OPTIONS_DISABLED,
+                    ALPHA_CHANNEL_OPTIONS_ENABLED
+            ),
+            (Output("initial-neighbourhood-radius", "disabled"), True, False),
+            (Output("initial-learning-rate", "disabled"), True, False),
+            (Output("neighbourhood-type", "disabled"), True, False),
+            (Output("learning-rate-decay-func", "disabled"), True, False),
         ],
         cancel=Input("stop-learning-btn", "n_clicks"),
         progress=[
@@ -289,17 +316,21 @@ def get_callbacks(app: Dash) -> None:
         :param number_of_iterations: number of learning iterations
         :param img_refresh_rate: refresh rate of image
         """
+        print("Launched learn_network callback")
         som = get_som_from_cache(session_id)
         number_of_iterations = int(number_of_iterations)
         img_refresh_rate = int(img_refresh_rate)
+        som.number_of_iterations = number_of_iterations
+        som.current_iteration = 1
         for i in range(number_of_iterations):
             som.train_network_single_iteration()
             progress_perc = int(((i+1)/number_of_iterations)*100)
             progress_label = "{0}%".format(progress_perc)
 
-            if ((i+1) % img_refresh_rate) == 0:
+            if (((i+1) % img_refresh_rate) == 0) or ((i+1) == number_of_iterations):
                 som_img = generate_som_image(som)
                 set_progress((str(progress_perc), progress_label, som_img))
+                time.sleep(0.5)
 
             store_som_in_cache(session_id, som)
 
@@ -320,6 +351,22 @@ def get_callbacks(app: Dash) -> None:
             State("learning-rate-decay-func", "value"),
             State("session-id", "children")
         ],
+        # running=[
+        #     (Output("run-learning-btn", "disabled"), True, False),
+        #     (Output("reset-som-btn", "disabled"), True, False),
+        #     (Output("stop-learning-btn", "disabled"), True, True),
+        #     (Output("som-size-slider", "disabled"), True, False),
+        #     (
+        #             Output("include-alpha-channel", "options"),
+        #             ALPHA_CHANNEL_OPTIONS_DISABLED,
+        #             ALPHA_CHANNEL_OPTIONS_ENABLED
+        #     ),
+        #     (Output("initial-neighbourhood-radius", "disabled"), True, False),
+        #     (Output("initial-learning-rate", "disabled"), True, False),
+        #     (Output("neighbourhood-type", "disabled"), True, False),
+        #     (Output("learning-rate-decay-func", "disabled"), True, False),
+        # ],
+        # background=True,
         prevent_initial_call=True
     )
     def learning_interrupted(
@@ -351,6 +398,7 @@ def get_callbacks(app: Dash) -> None:
             choices are 'Linear', 'Inverse of time' and 'Power series'.
         :param session_id: id of current session
         """
+        print("I'm in interrupt learning callback!")
         som = SelfOrganizingMap(
             size=som_size,
             include_alpha_channel=include_alpha_channel,
