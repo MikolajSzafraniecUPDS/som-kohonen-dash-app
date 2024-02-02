@@ -37,7 +37,7 @@ def serve_layout():
     session_id = str(uuid.uuid4())
 
     res = html.Div([
-        html.Div(session_id, id="session-id"),
+        html.Div(session_id, id="session-id", style={"visibility": "hidden"}),
         dbc.Tabs(
             id="section-selection",
             active_tab="som-setup-and-results",

@@ -246,7 +246,7 @@ def get_callbacks(app: Dash) -> None:
         return "File removed"
 
     @app.callback(
-        Output("learning-progress-bar", "value"),
+        Output("learning-progress-bar", "value", allow_duplicate=True),
         inputs=Input("run-learning-btn", "n_clicks"),
         background=True,
         state=[
@@ -290,20 +290,77 @@ def get_callbacks(app: Dash) -> None:
         :param img_refresh_rate: refresh rate of image
         """
         som = get_som_from_cache(session_id)
-        som_img = generate_som_image(som)
         number_of_iterations = int(number_of_iterations)
         img_refresh_rate = int(img_refresh_rate)
         for i in range(number_of_iterations):
             som.train_network_single_iteration()
             progress_perc = int(((i+1)/number_of_iterations)*100)
             progress_label = "{0}%".format(progress_perc)
-            # We need to save network to cache on each iteration - otherwise
-            # we would lose training results when cancelling the learning process
-            store_som_in_cache(session_id, som)
+
             if ((i+1) % img_refresh_rate) == 0:
                 som_img = generate_som_image(som)
                 set_progress((str(progress_perc), progress_label, som_img))
-            else:
-                set_progress((str(progress_perc), progress_label, som_img))
+
+            store_som_in_cache(session_id, som)
 
         return 0
+
+    @app.callback(
+        [
+            Output("learning-progress-bar", "value", allow_duplicate=True),
+            Output("som-img", "src", allow_duplicate=True)
+        ],
+        inputs=Input("stop-learning-btn", "n_clicks"),
+        state=[
+            State("som-size-slider", "value"),
+            State("include-alpha-channel", "value"),
+            State("initial-neighbourhood-radius", "value"),
+            State("initial-learning-rate", "value"),
+            State("neighbourhood-type", "value"),
+            State("learning-rate-decay-func", "value"),
+            State("session-id", "children")
+        ],
+        prevent_initial_call=True
+    )
+    def learning_interrupted(
+            n_clicks: int,
+            som_size: int,
+            include_alpha_channel: bool,
+            initial_neighbourhood_radius: int,
+            initial_learning_rate: float,
+            neighbourhood_type: str,
+            learning_rate_decay_func: str,
+            session_id: str
+    ):
+        """
+        When learning process is interrupted we need to reset som and
+        write it file - it might happen that learning process is interrupted
+        during pickling som object; in such a case when we try to load it afterward
+        we might obtain EOFerror. Issue described in the topic:
+        https://stackoverflow.com/questions/1653897/if-pickling-was-interrupted-will-unpickling-necessarily-always-fail-python
+
+        :param n_clicks: number of button clicks
+        :param som_size: network size
+        :param include_alpha_channel: alpha channel indicator
+        :param initial_neighbourhood_radius: initial neighbourhood radius as a percent
+            of network radius size
+        :param initial_learning_rate: initial learning rate
+        :param neighbourhood_type: type of neighbourhood function to use - one
+            of 'Gaussian' or 'Bubble'
+        :param learning_rate_decay_func: type of decay function for learning rate. Possible
+            choices are 'Linear', 'Inverse of time' and 'Power series'.
+        :param session_id: id of current session
+        """
+        som = SelfOrganizingMap(
+            size=som_size,
+            include_alpha_channel=include_alpha_channel,
+            initial_neighbourhood_radius=initial_neighbourhood_radius/100,
+            initial_learning_rate=initial_learning_rate,
+            neighbourhood_type=NeighbourhoodType(neighbourhood_type),
+            learning_rate_decay_func=LearningRateDecay(learning_rate_decay_func)
+        )
+        store_som_in_cache(session_id, som)
+        store_img = generate_som_image(som)
+        progress_val = 0
+
+        return progress_val, store_img
