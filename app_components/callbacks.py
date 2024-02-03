@@ -12,6 +12,7 @@ from dash import Input, Output, State
 from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
 from io import BytesIO
 from app_components.utils import get_som_from_cache, store_som_in_cache, rm_som_from_cache
+from typing import List
 
 ALPHA_CHANNEL_OPTIONS_ENABLED = [
     {"label": "True", "value": True},
@@ -22,6 +23,27 @@ ALPHA_CHANNEL_OPTIONS_DISABLED = [
     {"label": "True", "value": True, "disabled": True},
     {"label": "False", "value": False, "disabled": True},
 ]
+
+
+def validate_rgba_range_vals(single_range: List[int]):
+    """
+    Validate values of RGBA range - values are not allowed
+    to be the same, lower limit must be equal to or higher than
+    zero, higher limit must be equal to or lower than 256.
+
+    :param single_range:
+    :return:
+    """
+    if single_range[0] == 256:
+        single_range[0] -= 1
+
+    if single_range[1] == 0:
+        single_range[1] += 1
+
+    if single_range[0] == single_range[1]:
+        single_range[1] += 1
+
+    return single_range
 
 
 def generate_som_image(som: SelfOrganizingMap) -> str:
@@ -55,7 +77,11 @@ def get_callbacks(app: Dash) -> None:
             Input("initial-neighbourhood-radius", "value"),
             Input("initial-learning-rate", "value"),
             Input("neighbourhood-type", "value"),
-            Input("learning-rate-decay-func", "value")
+            Input("learning-rate-decay-func", "value"),
+            Input("red-range-slider", "value"),
+            Input("green-range-slider", "value"),
+            Input("blue-range-slider", "value"),
+            Input("alpha-channel-range-slider", "value")
         ],
         state=State("session-id", "children"),
         prevent_initial_call=True
@@ -67,7 +93,11 @@ def get_callbacks(app: Dash) -> None:
             initial_learning_rate: float,
             neighbourhood_type: str,
             learning_rate_decay_func: str,
-            session_id: str
+            red_range: List[int],
+            green_range: List[int],
+            blue_range: List[int],
+            alpha_channel_range: List[int],
+            session_id: str,
     ):
         """
         Check whether are there any changes in som parameters and
@@ -82,6 +112,11 @@ def get_callbacks(app: Dash) -> None:
             of 'Gaussian' or 'Bubble'
         :param learning_rate_decay_func: type of decay function for learning rate. Possible
             choices are 'Linear', 'Inverse of time' and 'Power series'.
+        :param red_range: range of red component
+        :param green_range: range of green component
+        :param blue_range: range of blue component
+        :param alpha_channel_range: alpha channel of red component
+        :param session_id: id of current session
         :param session_id: id of current session
         """
         print("Launched update_button_status callback")
@@ -93,9 +128,27 @@ def get_callbacks(app: Dash) -> None:
         neighbourhood_type_same = neighbourhood_type == som.neighbourhood_type.value
         learning_rate_decay_func_same = learning_rate_decay_func == som.learning_rate_decay_func.value
 
+        rgba_low = (
+            red_range[0],
+            green_range[0],
+            blue_range[0],
+            alpha_channel_range[0]
+        )
+
+        rgba_high = (
+            red_range[1],
+            green_range[1],
+            blue_range[1],
+            alpha_channel_range[1]
+        )
+
+        rgba_low_same = rgba_low == som.rgba_low
+        rgba_high_same = rgba_high == som.rgba_high
+
         update_button_disabled = all(
             [size_same, alpha_channel_same, neighbourhood_radius_same,
-             learning_rate_same, neighbourhood_type_same, learning_rate_decay_func_same]
+             learning_rate_same, neighbourhood_type_same, learning_rate_decay_func_same,
+             rgba_low_same, rgba_high_same]
         )
 
         return update_button_disabled
@@ -113,7 +166,11 @@ def get_callbacks(app: Dash) -> None:
             State("initial-learning-rate", "value"),
             State("neighbourhood-type", "value"),
             State("learning-rate-decay-func", "value"),
-            State("session-id", "children")
+            State("red-range-slider", "value"),
+            State("green-range-slider", "value"),
+            State("blue-range-slider", "value"),
+            State("alpha-channel-range-slider", "value"),
+            State("session-id", "children"),
         ],
         # background=True,
         # running=[
@@ -129,7 +186,11 @@ def get_callbacks(app: Dash) -> None:
             initial_learning_rate: float,
             neighbourhood_type: str,
             learning_rate_decay_func: str,
-            session_id: str
+            red_range: List[int],
+            green_range: List[int],
+            blue_range: List[int],
+            alpha_channel_range: List[int],
+            session_id: str,
     ):
         """
         Update network and print its image representation in app
@@ -145,6 +206,10 @@ def get_callbacks(app: Dash) -> None:
             of 'Gaussian' or 'Bubble'
         :param learning_rate_decay_func: type of decay function for learning rate. Possible
             choices are 'Linear', 'Inverse of time' and 'Power series'.
+        :param red_range: range of red component
+        :param green_range: range of green component
+        :param blue_range: range of blue component
+        :param alpha_channel_range: alpha channel of red component
         :param session_id: id of current session
         """
         print("Launched update_network callback")
@@ -166,6 +231,20 @@ def get_callbacks(app: Dash) -> None:
         som.initial_learning_rate = initial_learning_rate
         som.neighbourhood_type = NeighbourhoodType(neighbourhood_type)
         som.learning_rate_decay_func = LearningRateDecay(learning_rate_decay_func)
+
+        rgba_low = (
+            red_range[0],
+            green_range[0],
+            blue_range[0],
+            alpha_channel_range[0]
+        )
+
+        rgba_high = (
+            red_range[1],
+            green_range[1],
+            blue_range[1],
+            alpha_channel_range[1]
+        )
 
         som_img = generate_som_image(som)
         store_som_in_cache(session_id, som)
@@ -198,7 +277,11 @@ def get_callbacks(app: Dash) -> None:
             Output("initial-learning-rate", "value"),
             Output("neighbourhood-type", "value"),
             Output("learning-rate-decay-func", "value"),
-            Output("update-network-btn", "disabled", allow_duplicate=True)
+            Output("red-range-slider", "value", allow_duplicate=True),
+            Output("green-range-slider", "value", allow_duplicate=True),
+            Output("blue-range-slider", "value", allow_duplicate=True),
+            Output("alpha-channel-range-slider", "value", allow_duplicate=True),
+            Output("update-network-btn", "disabled", allow_duplicate=True),
         ],
         inputs=Input("reset-settings-changes-btn", "n_clicks"),
         state=State("session-id", "children"),
@@ -219,11 +302,27 @@ def get_callbacks(app: Dash) -> None:
         som_initial_learning_rate = som.initial_learning_rate
         som_neighbourhood_type = som.neighbourhood_type.value
         som_learning_rate_decay_func = som.learning_rate_decay_func.value
+        rgba_low = som.rgba_low
+        rgba_high = som.rgba_high
 
-        return (som_size, som_alpha_channel_indicator,
-                som_initial_neighbourhood_radius, som_initial_learning_rate,
-                som_neighbourhood_type, som_learning_rate_decay_func,
-                True)
+        red_low_high = [rgba_low[0], rgba_high[0]]
+        green_low_high = [rgba_low[1], rgba_high[1]]
+        blue_low_high = [rgba_low[2], rgba_high[2]]
+        alpha_channel_low_high = [rgba_low[2], rgba_high[2]]
+
+        return (
+            som_size,
+            som_alpha_channel_indicator,
+            som_initial_neighbourhood_radius,
+            som_initial_learning_rate,
+            som_neighbourhood_type,
+            som_learning_rate_decay_func,
+            red_low_high,
+            green_low_high,
+            blue_low_high,
+            alpha_channel_low_high,
+            True
+        )
 
     @app.callback(
         Output("som-img", "src", allow_duplicate=True),
@@ -290,6 +389,10 @@ def get_callbacks(app: Dash) -> None:
             (Output("initial-learning-rate", "disabled"), True, False),
             (Output("neighbourhood-type", "disabled"), True, False),
             (Output("learning-rate-decay-func", "disabled"), True, False),
+            (Output("red-range-slider", "disabled"), True, False),
+            (Output("green-range-slider", "disabled"), True, False),
+            (Output("blue-range-slider", "disabled"), True, False),
+            (Output("alpha-channel-range-slider", "disabled"), True, False)
         ],
         cancel=Input("stop-learning-btn", "n_clicks"),
         progress=[
@@ -412,3 +515,43 @@ def get_callbacks(app: Dash) -> None:
         progress_val = 0
 
         return progress_val, store_img
+
+    @app.callback(
+        Output("rgba-range-sliders-collapse", "is_open"),
+        Input("show-rgba-range-sliders", "value")
+    )
+    def rgba_range_sliders_visibility(show_sliders: bool):
+        """
+        Show or hide Div containing RGBA range sliders
+
+        :param show_sliders: bool - whether to show sliders or not
+        """
+        return show_sliders
+
+    @app.callback(
+        [
+            Output("red-range-slider", "value", allow_duplicate=True),
+            Output("green-range-slider", "value", allow_duplicate=True),
+            Output("blue-range-slider", "value", allow_duplicate=True),
+            Output("alpha-channel-range-slider", "value", allow_duplicate=True)
+        ],
+        [
+            Input("red-range-slider", "value"),
+            Input("green-range-slider", "value"),
+            Input("blue-range-slider", "value"),
+            Input("alpha-channel-range-slider", "value")
+        ],
+        prevent_initial_call=True
+    )
+    def sliders_values_validation(
+            red_range,
+            green_range,
+            blue_range,
+            alpha_channel_range
+    ):
+        red_range = validate_rgba_range_vals(red_range)
+        green_range = validate_rgba_range_vals(green_range)
+        blue_range = validate_rgba_range_vals(blue_range)
+        alpha_channel_range = validate_rgba_range_vals(alpha_channel_range)
+
+        return red_range, green_range, blue_range, alpha_channel_range
