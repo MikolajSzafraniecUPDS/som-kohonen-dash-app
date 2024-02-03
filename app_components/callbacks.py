@@ -7,6 +7,7 @@ in this file.
 import base64
 import time
 
+import dash
 from dash.dash import Dash
 from dash import Input, Output, State
 from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
@@ -217,9 +218,12 @@ def get_callbacks(app: Dash) -> None:
         current_size = som.size
         current_alpha_channel_indicator = som.include_alpha_channel
 
+        size_different = current_size != som_size
+        alpha_channel_different = current_alpha_channel_indicator != include_alpha_channel
+
         # If both size and alpha channel indicator are going to be updated we
         # don't want to reset network twice
-        if (current_size != som_size) and (current_alpha_channel_indicator != include_alpha_channel):
+        if size_different and alpha_channel_different:
             som.resize_and_update_alpha_channel_indicator(
                 som_size, include_alpha_channel
             )
@@ -246,8 +250,16 @@ def get_callbacks(app: Dash) -> None:
             alpha_channel_range[1]
         )
 
-        som_img = generate_som_image(som)
+        som.rgba_low = rgba_low
+        som.rgba_high = rgba_high
+
         store_som_in_cache(session_id, som)
+
+        if size_different or alpha_channel_different:
+            som_img = generate_som_image(som)
+        else:
+            som_img = dash.no_update
+
         return som_img, True
 
     @app.callback(
