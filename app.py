@@ -45,7 +45,7 @@ def serve_layout():
             active_tab="som-setup-and-results",
             children=[
                 dbc.Tab(label="SOM learning", tab_id="som-setup-and-results"),
-                dbc.Tab(label="How does it work?")
+                dbc.Tab(label="Learning parameters - explanation", tab_id="about-learning-params")
             ]
         ),
         html.Div(id="output-tab"),
@@ -71,19 +71,21 @@ app.layout = serve_layout
     inputs=Input("section-selection", "active_tab"),
     state=State("session-id", "children")
 )
-def render_tab_content(tab_name: str, session_id: str) -> html.Div:
+def render_tab_content(tab_id: str, session_id: str) -> html.Div:
     """
     Render tab content dynamically. Such an approach is recommended
     due to the fact, that otherwise content for all tabs would be
     generated at the same moment, which could cause a performance
     issues.
 
-    :param tab_name: id of tab to show
+    :param tab_id: id of tab to show
     :param session_id: session id
     """
-    if tab_name == "som-setup-and-results":
+    if tab_id == "som-setup-and-results":
         som = get_som_from_cache(session_id)
         return render_som_setup_and_results_div(som)
+    if tab_id == "about-learning-params":
+        return render_about_learning_params_tab()
 
 
 get_callbacks(app)

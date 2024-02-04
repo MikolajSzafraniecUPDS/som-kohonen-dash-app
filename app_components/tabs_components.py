@@ -11,7 +11,7 @@ from SOM.SOM import SelfOrganizingMap, NeighbourhoodType, LearningRateDecay
 
 def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
     """
-    Render content of main tab, containing setup of our SOM
+    Render content of main tab, containing setup of SOM
     and presenting results in the form of RGB(A) image.
 
     :param som: SelfOrganizingMap object to print
@@ -289,6 +289,61 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                 ]
             )
         ])
+    ])
+
+    return res
+
+
+def render_about_learning_params_tab() -> html.Div:
+    """
+    Render content of Tab containing information about
+    learning parameters
+
+    :return: output tab Div
+    """
+    res = html.Div([
+        html.Br(),
+        dbc.Col([
+            dbc.Row([
+                html.Br(),
+                html.H2("About SOM"),
+                html.P([
+                    """
+                    Self organizing map (Kohonen network) is an unsupervised machine learning 
+                    algorithm and a type of self-organizing neural network, allowing to produce a 
+                    low-dimensional representation of a higher dimensional data set.
+                    Self organizing maps can help us understand the relationships between objects described by many 
+                    variables whose abstract nature is difficult to grasp with intuition.  Kohonen networks have a 
+                    specific topological structure (e.g. the form of a two-dimensional grid composed of individual neurons). 
+                    The neurons are initialised with random weights, but in the course of learning the weights are modified 
+                    so that neurons lying close to each other represent similar objects from the multidimensional space 
+                    from which our learning examples are drawn. However, producing a correct 
+                    mapping requires the right choice of learning parameters, depending on our requirements, network 
+                    size, data dimensionality, etc. This application has been developed to help understand the relationships 
+                    between the parameters and to support in the process of selecting their values. Using the RGB colour 
+                    palette, it helps to visually check that the set of parameters we have chosen does not lead 
+                    to overfitting of the network (too uniform, single-colour image) or underfitting (individual 
+                    pixels easily distinguishable). According to my experience, this way of interacting with Kohonen 
+                    networks can also be great fun : ) 
+                    """,
+                    html.Br(),
+                    html.Br(),
+                    "In the case of this application, the input data are 3 or 4 dimensional vectors representing "
+                    "the RGB(A) colour model (where A is the alpha channel defining transparency). Our Kohonen network "
+                    "is a PNG image, where a single pixel represents a neuron. Although we are dealing "
+                    "with a 4-dimensional space, we are able to visualise it in a simple way and, moreover, determine "
+                    "whether the learning process of the network has been successful (all colours from the colour "
+                    "palette are present in the image, similar colours are located close to each other, etc.). Playing "
+                    "with a Kohonen Network of this type helps to understand the idea of the algorithm and the influence "
+                    "of the various learning parameters on the final results."
+                ],
+                    style={
+                        "text-align": "justify",
+                        "text-justify": "inter-word"
+                    }
+                )
+            ])
+        ], width={"size": 8, "offset": 1})
     ])
 
     return res
