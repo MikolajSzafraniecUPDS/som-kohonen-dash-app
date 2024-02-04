@@ -25,13 +25,7 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                     dls.Hash(
                         html.Img(
                             id="som-img",
-                            style={
-                                "display": "block",
-                                "margin-left": "auto",
-                                "margin-right": "auto",
-                                "width": "80%",
-                                "image-rendering": "pixelated"
-                            },
+                            className="som-image",
                             src=generate_som_image(som)
                         ),
                         color="#435278",
@@ -71,10 +65,7 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                                 )
                             ]),
                         ]),
-                        style={
-                            'width': '80%',
-                            'text-align': 'center'
-                        }
+                        className="learning-specification"
                     )
                 ],
                     justify="center", align="center"
@@ -110,7 +101,7 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                             html.Div([
                                 dbc.Progress(
                                     value=0, id="learning-progress-bar",
-                                    style={"visibility": "hidden"}
+                                    className="hidden-component"
                                 )
                             ])
                         ])
@@ -119,10 +110,7 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                         align="center"
                     ),
                 ],
-                    style={
-                        'width': '80%',
-                        'text-align': 'center'
-                    }
+                    className="learning-specification"
                 )
             ]),
             dbc.Col(

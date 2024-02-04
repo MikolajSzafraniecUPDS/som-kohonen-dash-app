@@ -38,11 +38,14 @@ def serve_layout():
 
     res = html.Div([
         html.Div(session_id, id="session-id", style={"visibility": "hidden"}),
+        html.H1("RGB Self Organizing Map"),
+        html.Br(),
         dbc.Tabs(
             id="section-selection",
             active_tab="som-setup-and-results",
             children=[
-                dbc.Tab(label="SOM setup and results", tab_id="som-setup-and-results")
+                dbc.Tab(label="SOM learning", tab_id="som-setup-and-results"),
+                dbc.Tab(label="How does it work?")
             ]
         ),
         html.Div(id="output-tab"),

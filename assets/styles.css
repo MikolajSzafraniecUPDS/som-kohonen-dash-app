@@ -1,0 +1,20 @@
+.som-image {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 70%;
+    image-rendering: pixelated;
+}
+
+.learning-specification {
+    width: 80%;
+    text-align: center;
+}
+
+.hidden-component {
+    visibility: hidden
+}
+
+.visible-component {
+    visibility: visible
+}
