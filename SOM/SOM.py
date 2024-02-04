@@ -2,6 +2,9 @@
 Definitions of neuron and self-organising map. Details about learning parameters
 (learning rate, neighbourhood functions, etc.) can be found in the following
 article: https://ijmo.org/vol6/504-M08.pdf
+
+Interesting paper regarding impact of learning parameters:
+https://www.bjmc.lu.lv/fileadmin/user_upload/lu_portal/projekti/bjmc/Contents/2_2_1_Stefanovic_a.pdf
 """
 
 
@@ -432,7 +435,7 @@ class SelfOrganizingMap:
 
         :return: current value of learning rate
         """
-        res = self.initial_learning_rate*np.exp(self.current_iteration/self.number_of_iterations)
+        res = self.initial_learning_rate*np.exp(-self.current_iteration/self.number_of_iterations)
         return res
 
     def _get_current_learning_rate(self) -> float:
@@ -520,7 +523,11 @@ class SelfOrganizingMap:
         neurons_distance = self._get_neuron_distance(neuron_1, neuron_2)
         neighbourhood_radius = self._get_current_neighbourhood_radius()
 
-        component_1 = 2/(np.sqrt(3*neighbourhood_radius)*(np.pi**0.25))
+        # In literature this is the most common shape of first component
+        # of the formula, however in case of SOM it makes value of neighbourhood
+        # too low based on experience
+        #component_1 = 2/(np.sqrt(3*neighbourhood_radius)*(np.pi**0.25))
+        component_1 = 1
         component_2 = neurons_distance/(neighbourhood_radius**2)
         component_3 = neurons_distance/(2*(neighbourhood_radius**2))
 
