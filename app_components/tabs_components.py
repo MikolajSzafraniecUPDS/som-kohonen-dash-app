@@ -220,10 +220,10 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                                     dcc.RangeSlider(
                                         id="red-range-slider",
                                         min=0,
-                                        max=256,
+                                        max=255,
                                         step=1,
-                                        value=[0, 256],
-                                        marks={i: "{}".format(i) for i in [1, 10, 50, 100, 150, 200, 256]},
+                                        value=[0, 255],
+                                        marks={i: "{}".format(i) for i in [1, 10, 50, 100, 150, 200, 255]},
                                         allowCross=False,
                                         tooltip={"placement": "bottom", "always_visible": True}
                                     ),
@@ -232,10 +232,10 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                                     dcc.RangeSlider(
                                         id="green-range-slider",
                                         min=0,
-                                        max=256,
+                                        max=255,
                                         step=1,
-                                        value=[0, 256],
-                                        marks={i: "{}".format(i) for i in [1, 10, 50, 100, 150, 200, 256]},
+                                        value=[0, 255],
+                                        marks={i: "{}".format(i) for i in [1, 10, 50, 100, 150, 200, 255]},
                                         allowCross=False,
                                         tooltip={"placement": "bottom", "always_visible": True}
                                     ),
@@ -244,10 +244,10 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                                     dcc.RangeSlider(
                                         id="blue-range-slider",
                                         min=0,
-                                        max=256,
+                                        max=255,
                                         step=1,
-                                        value=[0, 256],
-                                        marks={i: "{}".format(i) for i in [1, 10, 50, 100, 150, 200, 256]},
+                                        value=[0, 255],
+                                        marks={i: "{}".format(i) for i in [1, 10, 50, 100, 150, 200, 255]},
                                         allowCross=False,
                                         tooltip={"placement": "bottom", "always_visible": True}
                                     ),
@@ -256,10 +256,10 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                                     dcc.RangeSlider(
                                         id="alpha-channel-range-slider",
                                         min=0,
-                                        max=256,
+                                        max=255,
                                         step=1,
-                                        value=[0, 256],
-                                        marks={i: "{}".format(i) for i in [1, 10, 50, 100, 150, 200, 256]},
+                                        value=[0, 255],
+                                        marks={i: "{}".format(i) for i in [1, 10, 50, 100, 150, 200, 255]},
                                         allowCross=False,
                                         tooltip={"placement": "bottom", "always_visible": True}
                                     )

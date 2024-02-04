@@ -34,8 +34,14 @@ def get_som_from_cache(session_id: str) -> SelfOrganizingMap:
     """
     file_name = os.path.join(CACHE_DIR, "som_{0}.pickle".format(session_id))
     if os.path.exists(file_name):
-        with open(file_name, 'rb') as f:
-            som = pickle.load(f)
+        try:
+            with open(file_name, 'rb') as f:
+                som = pickle.load(f)
+        except EOFError:
+            # This Error occurs sometimes after aborting process of
+            # learning
+            som = SelfOrganizingMap()
+            store_som_in_cache(session_id, som)
     else:
         som = SelfOrganizingMap()
         store_som_in_cache(session_id, som)

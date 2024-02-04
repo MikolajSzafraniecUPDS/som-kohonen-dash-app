@@ -35,7 +35,7 @@ def validate_rgba_range_vals(single_range: List[int]):
     :param single_range:
     :return:
     """
-    if single_range[0] == 256:
+    if single_range[0] == 255:
         single_range[0] -= 1
 
     if single_range[1] == 0:
@@ -464,7 +464,11 @@ def get_callbacks(app: Dash) -> None:
             State("initial-learning-rate", "value"),
             State("neighbourhood-type", "value"),
             State("learning-rate-decay-func", "value"),
-            State("session-id", "children")
+            State("red-range-slider", "value"),
+            State("green-range-slider", "value"),
+            State("blue-range-slider", "value"),
+            State("alpha-channel-range-slider", "value"),
+            State("session-id", "children"),
         ],
         # running=[
         #     (Output("run-learning-btn", "disabled"), True, False),
@@ -492,6 +496,10 @@ def get_callbacks(app: Dash) -> None:
             initial_learning_rate: float,
             neighbourhood_type: str,
             learning_rate_decay_func: str,
+            red_range: List[int],
+            green_range: List[int],
+            blue_range: List[int],
+            alpha_channel_range: List[int],
             session_id: str
     ):
         """
@@ -511,16 +519,36 @@ def get_callbacks(app: Dash) -> None:
             of 'Gaussian' or 'Bubble'
         :param learning_rate_decay_func: type of decay function for learning rate. Possible
             choices are 'Linear', 'Inverse of time' and 'Power series'.
+        :param red_range: range of red component
+        :param green_range: range of green component
+        :param blue_range: range of blue component
+        :param alpha_channel_range: alpha channel of red component
         :param session_id: id of current session
         """
         print("I'm in interrupt learning callback!")
+        rgba_low = (
+            red_range[0],
+            green_range[0],
+            blue_range[0],
+            alpha_channel_range[0]
+        )
+
+        rgba_high = (
+            red_range[1],
+            green_range[1],
+            blue_range[1],
+            alpha_channel_range[1]
+        )
+
         som = SelfOrganizingMap(
             size=som_size,
             include_alpha_channel=include_alpha_channel,
             initial_neighbourhood_radius=initial_neighbourhood_radius/100,
             initial_learning_rate=initial_learning_rate,
             neighbourhood_type=NeighbourhoodType(neighbourhood_type),
-            learning_rate_decay_func=LearningRateDecay(learning_rate_decay_func)
+            learning_rate_decay_func=LearningRateDecay(learning_rate_decay_func),
+            rgba_low=rgba_low,
+            rgba_high=rgba_high
         )
         store_som_in_cache(session_id, som)
         store_img = generate_som_image(som)
@@ -561,6 +589,17 @@ def get_callbacks(app: Dash) -> None:
             blue_range,
             alpha_channel_range
     ):
+        """
+        Validate values of sliders - upper and lower bound cannot be
+        equal, lower bound must be lower than 255 and upper bound must be
+        higher than 0
+
+        :param red_range:
+        :param green_range:
+        :param blue_range:
+        :param alpha_channel_range:
+        :return:
+        """
         red_range = validate_rgba_range_vals(red_range)
         green_range = validate_rgba_range_vals(green_range)
         blue_range = validate_rgba_range_vals(blue_range)

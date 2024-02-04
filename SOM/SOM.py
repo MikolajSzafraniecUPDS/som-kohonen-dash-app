@@ -42,11 +42,11 @@ class Neuron:
     def initialize_rgb_values(self) -> None:
         """
         Assign RGB(A) values, picked randomly
-        from range (0, 255)
+        from range [0, 256)
         """
         vals_num: int = 4 if self.include_alpha_channel else 3
         rgb_vals = np.random.randint(
-            low=0, high=255, size=vals_num
+            low=0, high=256, size=vals_num
         )
         self.RGB_vals = rgb_vals.astype(np.uint8)
 
@@ -81,6 +81,12 @@ class Neuron:
         """
         current_weights_input_vec_diff = input_vector-self.RGB_vals
         new_weights = self.RGB_vals + (learning_rate*neighbourhood_value*current_weights_input_vec_diff)
+
+        # For Mexican hat neighbourhood function there is a possibility to go beyond
+        # interval [0, 255] - we need to take care of such cases
+        new_weights[new_weights < 0] = 0
+        new_weights[new_weights > 255] = 255
+
         new_weights = new_weights.astype(np.uint8)
         self.RGB_vals = new_weights
 
@@ -91,6 +97,7 @@ class NeighbourhoodType(StrEnum):
     """
     GAUSSIAN = "Gaussian"
     BUBBLE = "Bubble"
+    MEXICAN_HAT = "Mexican hat"
 
 
 # Available types of learning rate decay function
@@ -113,8 +120,8 @@ class SelfOrganizingMap:
             initial_learning_rate: float = 0.5,
             neighbourhood_type: NeighbourhoodType = NeighbourhoodType.GAUSSIAN,
             learning_rate_decay_func: LearningRateDecay = LearningRateDecay.INVERSE_OF_TIME,
-            rgba_low: Tuple[int] = (0, 0, 0, 0),
-            rgba_high: Tuple[int] = (256, 256, 256, 256)
+            rgba_low: Tuple[int, int, int, int] = (0, 0, 0, 0),
+            rgba_high: Tuple[int, int, int, int] = (255, 255, 255, 255)
     ):
         """
         Create an instance of self organizing map (Kohonen network).
@@ -134,9 +141,7 @@ class SelfOrganizingMap:
         :param rgba_low: lower limit of the RGBA values to drawn for each learning iteration.
             Must be a tuple of length 4 with values in range [0, 255]
         param: rgba_high: upper limit of the RGBA values to drawn for each learning iteration.
-            Must be a tuple of length 4 with values in range [1, 256] (np.random.randint function
-            uses 'half-open' interval in form [low, high). Details in documentation:
-            https://numpy.org/doc/stable/reference/random/generated/numpy.random.randint.html
+            Must be a tuple of length 4 with values in range [1, 255]
         """
         self._LEARNING_RATE_DECAY_FUNCTIONS = {
             "Linear": self._get_learning_rate_linear,
@@ -145,7 +150,8 @@ class SelfOrganizingMap:
         }
         self._NEIGHBOURHOOD_FUNCTIONS = {
             "Gaussian": self._gaussian_neighbourhood,
-            "Bubble": self._square_neighbourhood
+            "Bubble": self._square_neighbourhood,
+            "Mexican hat": self._mexican_hat_neighbourhood
         }
         self.neurons = None
         self.size = size
@@ -342,7 +348,12 @@ class SelfOrganizingMap:
 
         :return: rgba_high value
         """
-        return self._rgba_high
+        # Numpy random.randint function uses 'half-open'
+        # interval in form [low, high), that's why we need to
+        # transform values.
+        # Details in docs: https://numpy.org/doc/stable/reference/random/generated/numpy.random.randint.html
+        rgba_high = tuple([val-1 for val in self._rgba_high])
+        return rgba_high
 
     def _set_rgba_high(self, value: Tuple[int]) -> None:
         """
@@ -351,19 +362,26 @@ class SelfOrganizingMap:
 
         :param value: value of rgba_high property to set
         """
+
+        # Numpy random.randint function uses 'half-open'
+        # interval in form [low, high), that's why we need to
+        # add one to each value.
+        # Details in docs: https://numpy.org/doc/stable/reference/random/generated/numpy.random.randint.html
+        value = tuple([val + 1 for val in value])
+
         if len(value) != 4:
             raise ValueError(
                 "Length of rgba_high tuple must be 4."
             )
 
-        if not all([lb > 0 for lb in value]):
+        if not all([ub > 0 for ub in value]):
             raise ValueError(
                 "Upper limit of RGBA values must be higher than 0."
             )
 
-        if not all([lb < 257 for lb in value]):
+        if not all([ub < 257 for ub in value]):
             raise ValueError(
-                "Upper limit of RGBA values must lower than 257."
+                "Upper limit of RGBA values must lower than 255."
             )
 
         self._rgba_high = value
@@ -484,6 +502,32 @@ class SelfOrganizingMap:
         res = 1.0 if neurons_distance <= neighbourhood_radius else 0.0
         return res
 
+    def _mexican_hat_neighbourhood(self, neuron_1: Neuron, neuron_2: Neuron) -> float:
+        """
+        Mexican hat neighbourhood function. It penalizes neighbours that are
+        farther away from the center. Formula and more details to find here:
+        https://coursepages2.tuni.fi/tiets07/wp-content/uploads/sites/110/2019/01/Neurocomputing3.pdf
+        and here:
+        https://en.wikipedia.org/wiki/Ricker_wavelet
+        and:
+        https://www.mathworks.com/matlabcentral/answers/1684314-what-is-the-equation-for-mexican-hat-wavelet-defined-by-mexihat-function
+
+        :param neuron_1: neuron to calculate neighbourhood value for
+        :param neuron_2: neuron to calculate neighbourhood value for
+
+        :return: value of neighbourhood according to the mexican hat formula
+        """
+        neurons_distance = self._get_neuron_distance(neuron_1, neuron_2)
+        neighbourhood_radius = self._get_current_neighbourhood_radius()
+
+        component_1 = 2/(np.sqrt(3*neighbourhood_radius)*(np.pi**0.25))
+        component_2 = neurons_distance/(neighbourhood_radius**2)
+        component_3 = neurons_distance/(2*(neighbourhood_radius**2))
+
+        res = component_1*(1-component_2)*np.exp(-component_3)
+        return res
+
+
     def _get_bmu(self, input_vector: np.ndarray) -> Neuron:
         """
         Get BMU (best matching unit) for given input vector.
@@ -507,8 +551,8 @@ class SelfOrganizingMap:
         """
         vals_num = 4 if self.include_alpha_channel else 3
         input_vector = np.random.randint(
-            low=self.rgba_low[:vals_num],
-            high=self.rgba_high[:vals_num],
+            low=self._rgba_low[:vals_num],
+            high=self._rgba_high[:vals_num],
             size=vals_num
         )
         bmu = self._get_bmu(input_vector)
