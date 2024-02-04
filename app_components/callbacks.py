@@ -26,27 +26,6 @@ ALPHA_CHANNEL_OPTIONS_DISABLED = [
 ]
 
 
-def validate_rgba_range_vals(single_range: List[int]):
-    """
-    Validate values of RGBA range - values are not allowed
-    to be the same, lower limit must be equal to or higher than
-    zero, higher limit must be equal to or lower than 256.
-
-    :param single_range:
-    :return:
-    """
-    if single_range[0] == 255:
-        single_range[0] -= 1
-
-    if single_range[1] == 0:
-        single_range[1] += 1
-
-    if single_range[0] == single_range[1]:
-        single_range[1] += 1
-
-    return single_range
-
-
 def generate_som_image(som: SelfOrganizingMap) -> str:
     """
     Generate encoded SOM image
@@ -567,42 +546,3 @@ def get_callbacks(app: Dash) -> None:
         :param show_sliders: bool - whether to show sliders or not
         """
         return show_sliders
-
-    @app.callback(
-        [
-            Output("red-range-slider", "value", allow_duplicate=True),
-            Output("green-range-slider", "value", allow_duplicate=True),
-            Output("blue-range-slider", "value", allow_duplicate=True),
-            Output("alpha-channel-range-slider", "value", allow_duplicate=True)
-        ],
-        [
-            Input("red-range-slider", "value"),
-            Input("green-range-slider", "value"),
-            Input("blue-range-slider", "value"),
-            Input("alpha-channel-range-slider", "value")
-        ],
-        prevent_initial_call=True
-    )
-    def sliders_values_validation(
-            red_range,
-            green_range,
-            blue_range,
-            alpha_channel_range
-    ):
-        """
-        Validate values of sliders - upper and lower bound cannot be
-        equal, lower bound must be lower than 255 and upper bound must be
-        higher than 0
-
-        :param red_range:
-        :param green_range:
-        :param blue_range:
-        :param alpha_channel_range:
-        :return:
-        """
-        red_range = validate_rgba_range_vals(red_range)
-        green_range = validate_rgba_range_vals(green_range)
-        blue_range = validate_rgba_range_vals(blue_range)
-        alpha_channel_range = validate_rgba_range_vals(alpha_channel_range)
-
-        return red_range, green_range, blue_range, alpha_channel_range
