@@ -18,3 +18,23 @@
 .visible-component {
     visibility: visible
 }
+
+.justified-paragraph {
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+.tutorial-image {
+    display: block;
+    width: 100%;
+    image-rendering: pixelated;
+}
+
+.text-align-center {
+    text-align: center;
+}
+
+.tutorial-image-label {
+    font-size: 120%;
+    font-weight: bold;
+}

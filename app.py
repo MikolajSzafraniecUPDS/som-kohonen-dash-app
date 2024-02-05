@@ -45,7 +45,7 @@ def serve_layout():
             active_tab="som-setup-and-results",
             children=[
                 dbc.Tab(label="SOM learning", tab_id="som-setup-and-results"),
-                dbc.Tab(label="Learning parameters - explanation", tab_id="about-learning-params")
+                dbc.Tab(label="Tutorial", tab_id="about-learning-params")
             ]
         ),
         html.Div(id="output-tab"),

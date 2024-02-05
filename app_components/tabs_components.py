@@ -37,7 +37,7 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                         dbc.Row([
                             dbc.Col(
                                 [
-                                    dbc.Label("Number of learning iterations", align='center', width='50%'),
+                                    dbc.Label("Number of learning epochs", align='center', width='50%'),
                                     dcc.Slider(
                                         min=2,
                                         max=500,
@@ -321,29 +321,120 @@ def render_about_learning_params_tab() -> html.Div:
                     mapping requires the right choice of learning parameters, depending on our requirements, network 
                     size, data dimensionality, etc. This application has been developed to help understand the relationships 
                     between the parameters and to support in the process of selecting their values. Using the RGB colour 
-                    palette, it helps to visually check that the set of parameters we have chosen does not lead 
-                    to overfitting of the network (too uniform, single-colour image) or underfitting (individual 
-                    pixels easily distinguishable). According to my experience, this way of interacting with Kohonen 
-                    networks can also be great fun : ) 
-                    """,
-                    html.Br(),
-                    html.Br(),
-                    "In the case of this application, the input data are 3 or 4 dimensional vectors representing "
-                    "the RGB(A) colour model (where A is the alpha channel defining transparency). Our Kohonen network "
-                    "is a PNG image, where a single pixel represents a neuron. Although we are dealing "
-                    "with a 4-dimensional space, we are able to visualise it in a simple way and, moreover, determine "
-                    "whether the learning process of the network has been successful (all colours from the colour "
-                    "palette are present in the image, similar colours are located close to each other, etc.). Playing "
-                    "with a Kohonen Network of this type helps to understand the idea of the algorithm and the influence "
-                    "of the various learning parameters on the final results."
+                    palette, it helps to visually check that the set of parameters we have chosen does not produce
+                    network sensitive only to one type of signal (too uniform, single-colour image) or or a network 
+                    without seamless transitions between classes (too sharp borders between colors). 
+                    According to my experience, this way of interacting with Kohonen networks can also be great fun : ) 
+                    """
                 ],
-                    style={
-                        "text-align": "justify",
-                        "text-justify": "inter-word"
-                    }
+                    className="justified-paragraph"
+                )
+            ]),
+            dbc.Row([
+                html.Br(),
+                html.Hr(),
+                html.H4("Idea behind RGB(A) self-organizing map"),
+                html.P([
+                    """
+                    Our RGB(A) Kohonen network is a square-shaped, two dimensional network in topological
+                    terms. The length of the side of the square is determined in the settings and can be 
+                    between 10 and 250 neurons (pixels). Each neuron has three or four weights, depending 
+                    on whether we want to use the alpha channel component. Initial weights are assigned randomly
+                    as integers from range (0, 255). The network can be visualised as a PNG image - each neuron 
+                    represents an individual pixel and its weights are the value of the RGB(A) components.
+                    The aim is to train the network to produce the widest possible colour palette while 
+                    maintaining smooth transitions between them. The result of a network with too uniform a 
+                    colour or too sharp colour transitions indicates that we should probably change the learning parameters.
+                    The initial state of the network and examples of correct and incorrect learning results are presented below.
+                    """
+                ],
+                    className="justified-paragraph"
+                )
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    dbc.Label(
+                        "Initial state of network",
+                        className="tutorial-image-label"
+                    ),
+                    html.Img(
+                        src="assets/initial_state.png",
+                        className="tutorial-image"
+                    )
+                ],
+                    className="text-align-center",
+                    width=4
+                ),
+                dbc.Col([
+                    dbc.Label(
+                        "Properly learned network",
+                        className="tutorial-image-label"
+                    ),
+                    html.Img(
+                        src="assets/properly_fitted_network.png",
+                        className="tutorial-image"
+                    )
+                ],
+                    className="text-align-center",
+                    width=4
+                )
+            ],
+                justify="evenly"
+            ),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    dbc.Label(
+                        "Network too uniform",
+                        className="tutorial-image-label"
+                    ),
+                    html.Img(
+                        src="assets/uniform_network.png",
+                        className="tutorial-image"
+                    )
+                ],
+                    className="text-align-center",
+                    width=4
+                ),
+                dbc.Col([
+                    dbc.Label(
+                        "Colors transitions too sharp",
+                        className="tutorial-image-label"
+                    ),
+                    html.Img(
+                        src="assets/borders_too_sharp.png",
+                        className="tutorial-image"
+                    )
+                ],
+                    className="text-align-center",
+                    width=4
+                )
+            ],
+                justify="evenly"
+            ),
+            html.Br(),
+            dbc.Row([
+                html.P([
+                    """
+                    Process of learning network is pretty simple - in each iteration we randomly draw
+                    a vector containing RGB(A) components (learning example / input vector). As a next
+                    step we need to find so-called BMU (Best Matching Unit) - a neuron which is the most
+                    similar to the input vector in terms of euclidean distance. Then we need to calculate
+                    a value of learning rate for given iteration and value of neighbourhood for each neuron
+                    and BMU, using the formula we selected (gaussian, bubble or mexican hat function). Finally,
+                    we update weights of each neuron. Exact formulas and details of learning process are
+                    described pretty well in 
+                    """,
+                    html.A("this paper.", href="https://ijmo.org/vol6/504-M08.pdf", target="_empty")
+                ],
+                    className="justified-paragraph"
                 )
             ])
-        ], width={"size": 8, "offset": 1})
+        ],
+            width={
+                "size": 8, "offset": 1
+            }
+        )
     ])
 
     return res
