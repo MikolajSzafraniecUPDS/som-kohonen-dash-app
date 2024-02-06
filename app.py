@@ -37,7 +37,7 @@ def serve_layout():
     session_id = str(uuid.uuid4())
 
     res = html.Div([
-        html.Div(session_id, id="session-id", style={"visibility": "hidden"}),
+        html.Div(session_id, id="session-id", className="hidden-component"),
         html.H1("RGB Self Organizing Map"),
         html.Br(),
         dbc.Tabs(
