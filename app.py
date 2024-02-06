@@ -38,7 +38,7 @@ def serve_layout():
 
     res = html.Div([
         html.Div(session_id, id="session-id", className="hidden-component"),
-        html.H1("RGB Self Organizing Map"),
+        html.H1("RGB(A) Self Organizing Map"),
         html.Br(),
         dbc.Tabs(
             id="section-selection",

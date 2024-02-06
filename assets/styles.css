@@ -24,10 +24,15 @@
     text-justify: inter-word;
 }
 
-.tutorial-image {
+.tutorial-image-network {
     display: block;
     width: 100%;
     image-rendering: pixelated;
+}
+
+.tutorial-image-screen {
+    display: block;
+    width: 100%;
 }
 
 .text-align-center {

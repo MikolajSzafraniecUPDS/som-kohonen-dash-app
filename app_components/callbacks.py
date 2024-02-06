@@ -366,7 +366,7 @@ def get_callbacks(app: Dash) -> None:
             (Output("reset-som-btn", "disabled"), True, False),
             (Output("stop-learning-btn", "disabled"), False, True),
             (
-                Output("learning-progress-bar","className"),
+                Output("learning-progress-div","className"),
                 "visible-component",
                 "hidden-component"
             ),

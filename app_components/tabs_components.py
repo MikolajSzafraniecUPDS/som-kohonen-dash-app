@@ -99,11 +99,14 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                         ], width=9),
                         dbc.Col([
                             html.Div([
+                                dbc.Label("Learning progress"),
                                 dbc.Progress(
-                                    value=0, id="learning-progress-bar",
-                                    className="hidden-component"
+                                    value=0, id="learning-progress-bar"
                                 )
-                            ])
+                            ],
+                                id="learning-progress-div",
+                                className="hidden-component"
+                            )
                         ])
                     ],
                         justify="center",
@@ -152,9 +155,9 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                         html.Br(),
                         dbc.Label("Initial neighbourhood radius"),
                         dcc.Slider(
-                            min=1,
+                            min=0.1,
                             max=100,
-                            step=1,
+                            step=0.1,
                             value=10,
                             id="initial-neighbourhood-radius",
                             tooltip={
@@ -359,7 +362,7 @@ def render_about_learning_params_tab() -> html.Div:
                     ),
                     html.Img(
                         src="assets/initial_state.png",
-                        className="tutorial-image"
+                        className="tutorial-image-network"
                     )
                 ],
                     className="text-align-center",
@@ -372,7 +375,7 @@ def render_about_learning_params_tab() -> html.Div:
                     ),
                     html.Img(
                         src="assets/properly_fitted_network.png",
-                        className="tutorial-image"
+                        className="tutorial-image-network"
                     )
                 ],
                     className="text-align-center",
@@ -390,7 +393,7 @@ def render_about_learning_params_tab() -> html.Div:
                     ),
                     html.Img(
                         src="assets/uniform_network.png",
-                        className="tutorial-image"
+                        className="tutorial-image-network"
                     )
                 ],
                     className="text-align-center",
@@ -403,7 +406,7 @@ def render_about_learning_params_tab() -> html.Div:
                     ),
                     html.Img(
                         src="assets/borders_too_sharp.png",
-                        className="tutorial-image"
+                        className="tutorial-image-network"
                     )
                 ],
                     className="text-align-center",
@@ -429,7 +432,460 @@ def render_about_learning_params_tab() -> html.Div:
                 ],
                     className="justified-paragraph"
                 )
-            ])
+            ]),
+            dbc.Row([
+                html.Br(),
+                html.Hr(),
+                html.H4("Learning procedure"),
+                html.P([
+                    """
+                    In order to start learning procedure all you need to do is just click 'Run learning'
+                    button - you can do it directly after launching an app.
+                    """
+                ],
+                    className="justified-paragraph"
+                )
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.Img(
+                        src="assets/learning_details_1.png",
+                        className="tutorial-image-screen"
+                    )
+                ],
+                    width=7
+                )
+            ],
+                justify="center"
+            ),
+            html.Br(),
+            dbc.Row([
+                html.P([
+                    """
+                    If you would like to change a parameters you need to apply changes using
+                    'Update network' button.
+                    """
+                ],
+                    className="justified-paragraph"
+                )
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.Img(
+                        src="assets/learning_details_2.png",
+                        className="tutorial-image-screen"
+                    )
+                ],
+                    width=7
+                )
+            ],
+                justify="center"
+            ),
+            html.Br(),
+            dbc.Row([
+                html.P([
+                    """
+                    Please note that if you change size of the network or alpha channel indicator
+                    network will be reset as well as your learning results. If you change some parameters
+                    but you want to discard changes you can use 'Reset settings changes' button.
+                    """
+                ],
+                    className="justified-paragraph"
+                )
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.Img(
+                        src="assets/learning_details_3.png",
+                        className="tutorial-image-screen"
+                    )
+                ],
+                    width=7
+                )
+            ],
+                justify="center"
+            ),
+            html.Br(),
+            dbc.Row([
+                html.P([
+                    """
+                    If you have already start learning and you wish to stop the process you can
+                    use 'Stop learning' button.
+                    """
+                ],
+                    className="justified-paragraph"
+                )
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.Img(
+                        src="assets/learning_details_4.png",
+                        className="tutorial-image-screen"
+                    )
+                ],
+                    width=8
+                )
+            ],
+                justify="center"
+            ),
+            html.Br(),
+            dbc.Row([
+                html.P([
+                    """
+                    You can follow the progress of your learning with the progress bar.
+                    """
+                ],
+                    className="justified-paragraph"
+                )
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.Img(
+                        src="assets/learning_details_5.png",
+                        className="tutorial-image-screen"
+                    )
+                ],
+                    width=8
+                )
+            ],
+                justify="center"
+            ),
+            html.Br(),
+            dbc.Row([
+                html.P([
+                    """
+                    If you want to reset network after learning procedure you can use 'Reset network'
+                    button.
+                    """
+                ],
+                    className="justified-paragraph"
+                )
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.Img(
+                        src="assets/learning_details_6.png",
+                        className="tutorial-image-screen"
+                    )
+                ],
+                    width=8
+                )
+            ],
+                justify="center"
+            ),
+            html.Br(),
+            dbc.Row([
+                html.Hr(),
+                html.H4("Learning parameters"),
+                html.P([
+                    """
+                    All learning parameters are described below.
+                    """
+                ],
+                    className="justified-paragraph"
+                )
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Accordion([
+                    dbc.AccordionItem(
+                        html.Div([
+                            html.P([
+                                """
+                                This parameter simply defines the size of the network - the number
+                                of neurons (pixels) per side of the grid.
+                                """
+                            ],
+                                className="justified-paragraph"
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Img(
+                                        src="assets/som_params_1.png",
+                                        className="tutorial-image-screen"
+                                    )
+                                ],
+                                    width=9
+                                )
+                            ],
+                                justify="center"
+                            )
+                        ]),
+                        title="SOM size"
+                    ),
+                    dbc.AccordionItem(
+                        html.Div([
+                            html.P([
+                                """
+                                With this parameter, you can decide whether the network should contain 
+                                an alpha channel, which determines the transparency of a pixel.
+                                """
+                            ],
+                                className="justified-paragraph"
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Img(
+                                        src="assets/som_params_2.png",
+                                        className="tutorial-image-screen"
+                                    )
+                                ],
+                                    width=3
+                                )
+                            ],
+                                justify="center"
+                            )
+                        ]),
+                        title="Include alpha channel"
+                    ),
+                    dbc.AccordionItem(
+                        html.Div([
+                            html.P([
+                                """
+                                This parameter defines the initial neighbourhood radius as a percentage 
+                                of the network size. Too small a value for this parameter may result in 
+                                only small parts of our map being taught. Too large a value will result 
+                                in an almost uniform map after each learning epoch.
+                                """
+                            ],
+                                className="justified-paragraph"
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Img(
+                                        src="assets/som_params_3.png",
+                                        className="tutorial-image-screen"
+                                    )
+                                ],
+                                    width=9
+                                )
+                            ],
+                                justify="center"
+                            )
+                        ]),
+                        title="Initial neighbourhood radius"
+                    ),
+                    dbc.AccordionItem(
+                        html.Div([
+                            html.P([
+                                """
+                                Learning rate is one of the key parameters for learning. It 
+                                defines the strength with which the neuron weights are modified 
+                                in a given learning epoch. This parameter indicates the initial 
+                                value of the learning rate - this is then reduced with each 
+                                subsequent epoch.
+                                """
+                            ],
+                                className="justified-paragraph"
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Img(
+                                        src="assets/som_params_4.png",
+                                        className="tutorial-image-screen"
+                                    )
+                                ],
+                                    width=9
+                                )
+                            ],
+                                justify="center"
+                            )
+                        ]),
+                        title="Initial learning rate"
+                    ),
+                    dbc.AccordionItem(
+                        html.Div([
+                            html.P([
+                                """
+                                This function is closely related to the neighbourhood radius - using 
+                                its value for a given learning epoch, it calculates the neighbourhood 
+                                value for each neuron relative to the BMU. By using the Gaussian 
+                                neighbourhood function, we guarantee that the weights of each neuron 
+                                will be modified, to a greater extent the closer a given neuron is 
+                                to the BMU in terms of network topology. The Bubble neighbourhood 
+                                function equally modifies the weights of only those neurons that 
+                                are located within a given radius relative to the BMU.
+                                """
+                            ],
+                                className="justified-paragraph"
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Img(
+                                        src="assets/som_params_5.png",
+                                        className="tutorial-image-screen"
+                                    )
+                                ],
+                                    width=4
+                                )
+                            ],
+                                justify="center"
+                            )
+                        ]),
+                        title="Neighbourhood type"
+                    ),
+                    dbc.AccordionItem(
+                        html.Div([
+                            html.P([
+                                """
+                                As mentioned above, the value of the learning rate decreases 
+                                with each learning epoch - so that specific regions of the 
+                                network can 'specialise' in detecting a signal of a particular type. 
+                                This function defines a learning rate decrease depending on 
+                                the learning epoch number.
+                                """
+                            ],
+                                className="justified-paragraph"
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Img(
+                                        src="assets/som_params_6.png",
+                                        className="tutorial-image-screen"
+                                    )
+                                ],
+                                    width=4
+                                )
+                            ],
+                                justify="center"
+                            )
+                        ]),
+                        title="Decay function for learning rate"
+                    ),
+                    dbc.AccordionItem(
+                        html.Div([
+                            html.P([
+                                """
+                                These sliders allow you to define the RGB(A) channel 
+                                ranges that will be passed to the network as learning 
+                                examples. For example, leaving the range high for the 
+                                red channel and lowering it for the green and blue 
+                                channels will make the learning results strongly red-shifted.
+                                """
+                            ],
+                                className="justified-paragraph"
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Img(
+                                        src="assets/som_params_7.png",
+                                        className="tutorial-image-screen"
+                                    )
+                                ],
+                                    width=8
+                                )
+                            ],
+                                justify="center"
+                            )
+                        ]),
+                        title="RGB(A) range sliders"
+                    ),
+                    dbc.AccordionItem(
+                        html.Div([
+                            html.P([
+                                """
+                                This slider allows you to specify the number of learning epochs.
+                                """
+                            ],
+                                className="justified-paragraph"
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Img(
+                                        src="assets/som_params_8.png",
+                                        className="tutorial-image-screen"
+                                    )
+                                ],
+                                    width=8
+                                )
+                            ],
+                                justify="center"
+                            )
+                        ]),
+                        title="Number of learning epochs"
+                    ),
+                    dbc.AccordionItem(
+                        html.Div([
+                            html.P([
+                                """
+                                Refresh rate of image during network learning. Too high a frequency (1-5) 
+                                for large networks can significantly prolong the learning process.
+                                """
+                            ],
+                                className="justified-paragraph"
+                            ),
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Img(
+                                        src="assets/som_params_9.png",
+                                        className="tutorial-image-screen"
+                                    )
+                                ],
+                                    width=4
+                                )
+                            ],
+                                justify="center"
+                            )
+                        ]),
+                        title="Refresh rate"
+                    )
+                ],
+                    flush=True,
+                    active_item=None,
+                    always_open=True
+                )
+            ]),
+            dbc.Row([
+                html.Br(),
+                html.Hr(),
+                html.H4("References"),
+                html.P([
+                    """
+                    If you would like to better understand the process of learning SOM and
+                    take a look at exact formulas for parameters described above I highly
+                    recommend to take a look at materials below:
+                    """
+                ],
+                    className="justified-paragraph"
+                ),
+                html.A(
+                    """
+                    1) Wiki article
+                    """,
+                    href="https://en.wikipedia.org/wiki/Self-organizing_map",
+                    target="_empty"
+                ),
+                html.A(
+                    """
+                    2) Appropriate Learning Rate and Neighborhood Function of
+                    Self-organizing Map (SOM) for Specific Humidity Pattern
+                    Classification over Southern Thailand
+                    """,
+                    href="https://ijmo.org/vol6/504-M08.pdf",
+                    target="_empty"
+                ),
+                html.A(
+                    """
+                    3) Self Organizing Maps - TowardsDataScience article
+                    """,
+                    href="https://towardsdatascience.com/self-organizing-maps-1b7d2a84e065",
+                    target="_empty"
+                ),
+                html.A(
+                    """
+                    4) Nice presentation containing formula for Mexican Hat neighbourhood function
+                    """,
+                    href="https://coursepages2.tuni.fi/tiets07/wp-content/uploads/sites/110/2019/01/Neurocomputing3.pdf",
+                    target="_empty"
+                )
+            ]),
+            html.Br()
         ],
             width={
                 "size": 8, "offset": 1
