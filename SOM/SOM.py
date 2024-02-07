@@ -2,6 +2,9 @@
 Definitions of neuron and self-organising map. Details about learning parameters
 (learning rate, neighbourhood functions, etc.) can be found in the following
 article: https://ijmo.org/vol6/504-M08.pdf
+
+Interesting paper regarding impact of learning parameters:
+https://www.bjmc.lu.lv/fileadmin/user_upload/lu_portal/projekti/bjmc/Contents/2_2_1_Stefanovic_a.pdf
 """
 
 
@@ -10,6 +13,7 @@ import numpy as np
 import logging.config
 from PIL import Image
 from typing import Tuple
+from strenum import StrEnum
 
 logging.config.fileConfig(os.path.join("config", "logging.conf"))
 logger = logging.getLogger("consoleLogger")
@@ -41,11 +45,11 @@ class Neuron:
     def initialize_rgb_values(self) -> None:
         """
         Assign RGB(A) values, picked randomly
-        from range (0, 255)
+        from range [0, 256)
         """
         vals_num: int = 4 if self.include_alpha_channel else 3
         rgb_vals = np.random.randint(
-            low=0, high=255, size=vals_num
+            low=0, high=256, size=vals_num
         )
         self.RGB_vals = rgb_vals.astype(np.uint8)
 
@@ -80,23 +84,47 @@ class Neuron:
         """
         current_weights_input_vec_diff = input_vector-self.RGB_vals
         new_weights = self.RGB_vals + (learning_rate*neighbourhood_value*current_weights_input_vec_diff)
+
+        # For Mexican hat neighbourhood function there is a possibility to go beyond
+        # interval [0, 255] - we need to take care of such cases
+        new_weights[new_weights < 0] = 0
+        new_weights[new_weights > 255] = 255
+
         new_weights = new_weights.astype(np.uint8)
         self.RGB_vals = new_weights
 
 
-class SelfOrganizingMap:
+class NeighbourhoodType(StrEnum):
+    """
+    Available neighbourhood functions
+    """
+    GAUSSIAN = "Gaussian"
+    BUBBLE = "Bubble"
+    MEXICAN_HAT = "Mexican hat"
 
+
+# Available types of learning rate decay function
+class LearningRateDecay(StrEnum):
+    """
+    Available learning rate decay functions
+    """
+    LINEAR = "Linear"
+    INVERSE_OF_TIME = "Inverse of time"
+    POWER_SERIES = "Power series"
+
+
+class SelfOrganizingMap:
 
     def __init__(
             self,
-            size: int = 150,
-            include_alpha_channel: bool = True,
+            size: int = 100,
+            include_alpha_channel: bool = False,
             initial_neighbourhood_radius: float = 0.1,
             initial_learning_rate: float = 0.5,
-            neighbourhood_type: str = "gaussian",
-            learning_rate_decay_func: str = "inverse_of_time",
-            rgba_low: Tuple[int] = (0, 0, 0, 0),
-            rgba_high: Tuple[int] = (256, 256, 256, 256)
+            neighbourhood_type: NeighbourhoodType = NeighbourhoodType.GAUSSIAN,
+            learning_rate_decay_func: LearningRateDecay = LearningRateDecay.INVERSE_OF_TIME,
+            rgba_low: Tuple[int, int, int, int] = (0, 0, 0, 0),
+            rgba_high: Tuple[int, int, int, int] = (255, 255, 255, 255)
     ):
         """
         Create an instance of self organizing map (Kohonen network).
@@ -109,25 +137,24 @@ class SelfOrganizingMap:
         :param initial_learning_rate: initial value of learning rate - must be a float
             in range 0 < lr <= 1
         :param neighbourhood_type: type of neighbourhood function to use - one
-            of 'gaussian' or 'bubble'
+            of 'Gaussian' or 'Bubble'
         :param learning_rate_decay_func: type of decay function for learning rate. Possible
-            choices are 'linear', 'inverse_of_time' and 'power_series'. Details in paper
+            choices are 'Linear', 'Inverse of time' and 'Power series'. Details in paper
             https://ijmo.org/vol6/504-M08.pdf
         :param rgba_low: lower limit of the RGBA values to drawn for each learning iteration.
             Must be a tuple of length 4 with values in range [0, 255]
         param: rgba_high: upper limit of the RGBA values to drawn for each learning iteration.
-            Must be a tuple of length 4 with values in range [1, 256] (np.random.randint function
-            uses 'half-open' interval in form [low, high). Details in documentation:
-            https://numpy.org/doc/stable/reference/random/generated/numpy.random.randint.html
+            Must be a tuple of length 4 with values in range [1, 255]
         """
         self._LEARNING_RATE_DECAY_FUNCTIONS = {
-            "linear": self._get_learning_rate_linear,
-            "inverse_of_time": self._get_learning_rate_inverse_of_time,
-            "power_series": self._get_learning_rate_power_series
+            "Linear": self._get_learning_rate_linear,
+            "Inverse of time": self._get_learning_rate_inverse_of_time,
+            "Power series": self._get_learning_rate_power_series
         }
         self._NEIGHBOURHOOD_FUNCTIONS = {
-            "gaussian": self._gaussian_neighbourhood,
-            "bubble": self._square_neighbourhood
+            "Gaussian": self._gaussian_neighbourhood,
+            "Bubble": self._square_neighbourhood,
+            "Mexican hat": self._mexican_hat_neighbourhood
         }
         self.neurons = None
         self.size = size
@@ -183,64 +210,6 @@ class SelfOrganizingMap:
         _set_alpha_channel_indicator
     )
 
-    def _get_neighbourhood_type(self) -> str:
-        """
-        Getter for 'neighbourhood_type' property
-
-        :return: neighbourhood_type value
-        """
-        return self._neighbourhood_type
-
-    def _set_neighbourhood_type(self, value: str) -> None:
-        """
-        Setter for 'neighbourhood_type' property. It verifies whether
-        proper value is trying to be set.
-
-        :param value: neighbourhood type to set
-        """
-        valid_neighbourhood_functions = self._NEIGHBOURHOOD_FUNCTIONS.keys()
-        if value not in valid_neighbourhood_functions:
-            raise ValueError(
-                "Neighbourhood type must be one of {0}".format(
-                    list(valid_neighbourhood_functions)
-                )
-            )
-        self._neighbourhood_type = value
-
-    neighbourhood_type = property(
-        _get_neighbourhood_type,
-        _set_neighbourhood_type
-    )
-
-    def _get_learning_rate_decay_func(self) -> str:
-        """
-        Getter for 'learning_rate_decay_func' property
-
-        :return: neighbourhood_type value
-        """
-        return self._learning_rate_decay_func
-
-    def _set_learning_rate_decay_func(self, value: str) -> None:
-        """
-        Setter for 'learning_rate_decay_func' property. It verifies whether
-        proper value is trying to be set.
-
-        :param value: name of learning rate decay function
-        """
-        valid_lr_decay_functions = self._LEARNING_RATE_DECAY_FUNCTIONS.keys()
-        if value not in valid_lr_decay_functions:
-            raise ValueError(
-                "Learning rate decay function must be one of {0}".format(
-                    list(valid_lr_decay_functions)
-                )
-            )
-        self._learning_rate_decay_func = value
-
-    learning_rate_decay_func = property(
-        _get_learning_rate_decay_func,
-        _set_learning_rate_decay_func
-    )
-
     def _get_size(self) -> int:
         """
         Size property getter
@@ -267,6 +236,23 @@ class SelfOrganizingMap:
         _set_size
     )
 
+    def resize_and_update_alpha_channel_indicator(
+            self, new_size: int, alpha_channel_ind: bool
+    ) -> None:
+        """
+        In some cases we want to update both size and alpha channel
+        indicator at the same time. To not reset network twice (it
+        would be done if we would assign new size as a first step
+        and new alpha channel indicator as a second step) we can
+        use this method.
+
+        :param new_size: new size of network
+        :param alpha_channel_ind: new alpha channel indicator
+        """
+        self._size = new_size
+        self._include_alpha_channel = alpha_channel_ind
+        self.reset_network()
+
     def _get_initial_neighbourhood_radius(self) -> float:
         """
         Get initial neighbourhood factor as a ratio of network
@@ -286,7 +272,7 @@ class SelfOrganizingMap:
         """
         if (value <= 0) or (value > 1):
             raise ValueError(
-                "Initial neighbourhood radius must be in range 0 < value <= 1."
+                "Initial neighbourhood radius must be in range 0 < value <= 1"
             )
         self._initial_neighbourhood_radius_ratio = value
         self._initial_neighbourhood_radius = int(self.size*value)
@@ -365,7 +351,12 @@ class SelfOrganizingMap:
 
         :return: rgba_high value
         """
-        return self._rgba_high
+        # Numpy random.randint function uses 'half-open'
+        # interval in form [low, high), that's why we need to
+        # transform values.
+        # Details in docs: https://numpy.org/doc/stable/reference/random/generated/numpy.random.randint.html
+        rgba_high = tuple([val-1 for val in self._rgba_high])
+        return rgba_high
 
     def _set_rgba_high(self, value: Tuple[int]) -> None:
         """
@@ -374,19 +365,26 @@ class SelfOrganizingMap:
 
         :param value: value of rgba_high property to set
         """
+
+        # Numpy random.randint function uses 'half-open'
+        # interval in form [low, high), that's why we need to
+        # add one to each value.
+        # Details in docs: https://numpy.org/doc/stable/reference/random/generated/numpy.random.randint.html
+        value = tuple([val + 1 for val in value])
+
         if len(value) != 4:
             raise ValueError(
                 "Length of rgba_high tuple must be 4."
             )
 
-        if not all([lb > 0 for lb in value]):
+        if not all([ub > 0 for ub in value]):
             raise ValueError(
                 "Upper limit of RGBA values must be higher than 0."
             )
 
-        if not all([lb < 257 for lb in value]):
+        if not all([ub < 257 for ub in value]):
             raise ValueError(
-                "Upper limit of RGBA values must lower than 257."
+                "Upper limit of RGBA values must lower than 255."
             )
 
         self._rgba_high = value
@@ -437,7 +435,7 @@ class SelfOrganizingMap:
 
         :return: current value of learning rate
         """
-        res = self.initial_learning_rate*np.exp(self.current_iteration/self.number_of_iterations)
+        res = self.initial_learning_rate*np.exp(-self.current_iteration/self.number_of_iterations)
         return res
 
     def _get_current_learning_rate(self) -> float:
@@ -507,6 +505,36 @@ class SelfOrganizingMap:
         res = 1.0 if neurons_distance <= neighbourhood_radius else 0.0
         return res
 
+    def _mexican_hat_neighbourhood(self, neuron_1: Neuron, neuron_2: Neuron) -> float:
+        """
+        Mexican hat neighbourhood function. It penalizes neighbours that are
+        farther away from the center. Formula and more details to find here:
+        https://coursepages2.tuni.fi/tiets07/wp-content/uploads/sites/110/2019/01/Neurocomputing3.pdf
+        and here:
+        https://en.wikipedia.org/wiki/Ricker_wavelet
+        and:
+        https://www.mathworks.com/matlabcentral/answers/1684314-what-is-the-equation-for-mexican-hat-wavelet-defined-by-mexihat-function
+
+        :param neuron_1: neuron to calculate neighbourhood value for
+        :param neuron_2: neuron to calculate neighbourhood value for
+
+        :return: value of neighbourhood according to the mexican hat formula
+        """
+        neurons_distance = self._get_neuron_distance(neuron_1, neuron_2)
+        neighbourhood_radius = self._get_current_neighbourhood_radius()
+
+        # In literature this is the most common shape of first component
+        # of the formula, however in case of SOM it makes value of neighbourhood
+        # too low based on experience
+        #component_1 = 2/(np.sqrt(3*neighbourhood_radius)*(np.pi**0.25))
+        component_1 = 1
+        component_2 = neurons_distance/(neighbourhood_radius**2)
+        component_3 = neurons_distance/(2*(neighbourhood_radius**2))
+
+        res = component_1*(1-component_2)*np.exp(-component_3)
+        return res
+
+
     def _get_bmu(self, input_vector: np.ndarray) -> Neuron:
         """
         Get BMU (best matching unit) for given input vector.
@@ -530,8 +558,8 @@ class SelfOrganizingMap:
         """
         vals_num = 4 if self.include_alpha_channel else 3
         input_vector = np.random.randint(
-            low=self.rgba_low[:vals_num],
-            high=self.rgba_high[:vals_num],
+            low=self._rgba_low[:vals_num],
+            high=self._rgba_high[:vals_num],
             size=vals_num
         )
         bmu = self._get_bmu(input_vector)

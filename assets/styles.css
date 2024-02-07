@@ -1,0 +1,45 @@
+.som-image {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 70%;
+    image-rendering: pixelated;
+}
+
+.learning-specification {
+    width: 80%;
+    text-align: center;
+}
+
+.hidden-component {
+    visibility: hidden
+}
+
+.visible-component {
+    visibility: visible
+}
+
+.justified-paragraph {
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+.tutorial-image-network {
+    display: block;
+    width: 100%;
+    image-rendering: pixelated;
+}
+
+.tutorial-image-screen {
+    display: block;
+    width: 100%;
+}
+
+.text-align-center {
+    text-align: center;
+}
+
+.tutorial-image-label {
+    font-size: 120%;
+    font-weight: bold;
+}
