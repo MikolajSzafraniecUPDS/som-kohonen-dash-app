@@ -2,7 +2,7 @@ import os
 import glob
 import logging.config
 
-logging.config.fileConfig(os.path.join("../som-app", "config", "logging.conf"))
+logging.config.fileConfig(os.path.join("som-app", "config", "logging.conf"))
 logger = logging.getLogger("consoleLogger")
 
 
@@ -12,7 +12,7 @@ def clean_cache() -> None:
     Firefox) beforeunload event doesn't work while closing whole window instead
     of single card, that's why we need to do a cleanage.
     """
-    cache_path = os.path.join("../som-app", "cache")
+    cache_path = os.path.join("som-app", "cache")
     if os.path.exists(cache_path):
         logger.info("Cleaning cache")
 
