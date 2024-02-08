@@ -8,6 +8,7 @@ from dash import Dash, DiskcacheManager, CeleryManager, Input, Output, State
 from app_components.tabs_components import *
 from app_components.callbacks import get_callbacks
 from app_components.utils import CACHE_DIR, store_som_in_cache, get_som_from_cache
+from SOM.SOM import SelfOrganizingMap
 
 # Set background callback manager (required to dynamically change Outputs during the
 # processing - in our case process of learning the network). More details in documentation:
@@ -23,14 +24,24 @@ else:
     cache = diskcache.Cache(CACHE_DIR)
     background_callback_manager = DiskcacheManager(cache)
 
+env_type = os.environ.get("APP_ENVIRON", "local")
+
 # Initialize the app
 external_stylesheets = [dbc.themes.DARKLY]
+
 app = Dash(
     "som_rgb_example",
     external_stylesheets=external_stylesheets,
     suppress_callback_exceptions=True,  # We generate tab content dynamically, so this flag must be set as True
     background_callback_manager=background_callback_manager
 )
+
+if env_type == "local":
+    debug = True
+else:
+    debug = False
+    server = app.server
+
 
 
 def serve_layout():
@@ -92,4 +103,4 @@ get_callbacks(app)
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=debug, host="0.0.0.0", port=8050)
