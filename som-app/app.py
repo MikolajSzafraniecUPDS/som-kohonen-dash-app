@@ -8,6 +8,7 @@ from dash import Dash, DiskcacheManager, CeleryManager, Input, Output, State
 from app_components.tabs_components import *
 from app_components.callbacks import get_callbacks
 from app_components.utils import CACHE_DIR, store_som_in_cache, get_som_from_cache
+from SOM.SOM import SelfOrganizingMap
 
 # Set background callback manager (required to dynamically change Outputs during the
 # processing - in our case process of learning the network). More details in documentation:
@@ -23,8 +24,11 @@ else:
     cache = diskcache.Cache(CACHE_DIR)
     background_callback_manager = DiskcacheManager(cache)
 
+env_type = os.environ.get("APP_ENVIRON", "local")
+
 # Initialize the app
 external_stylesheets = [dbc.themes.DARKLY]
+
 app = Dash(
     "som_rgb_example",
     external_stylesheets=external_stylesheets,
@@ -32,9 +36,22 @@ app = Dash(
     background_callback_manager=background_callback_manager
 )
 
+if env_type == "local":
+    debug = True
+elif env_type == "docker_env":
+    debug = False
+    server = app.server
+else:
+    raise ValueError(
+        "Name of environment {0} is not valid".format(env_type)
+    )
+
 
 def serve_layout():
     session_id = str(uuid.uuid4())
+
+    som = SelfOrganizingMap()
+    store_som_in_cache(session_id, som)
 
     res = html.Div([
         html.Div(session_id, id="session-id", className="hidden-component"),
@@ -44,8 +61,8 @@ def serve_layout():
             id="section-selection",
             active_tab="som-setup-and-results",
             children=[
-                dbc.Tab(label="SOM learning", tab_id="som-setup-and-results"),
-                dbc.Tab(label="Tutorial", tab_id="about-learning-params")
+                dbc.Tab(render_som_setup_and_results_div(som), label="SOM learning", tab_id="som-setup-and-results"),
+                dbc.Tab(render_about_learning_params_tab(), label="Tutorial", tab_id="about-learning-params")
             ]
         ),
         html.Div(id="output-tab"),
@@ -55,41 +72,13 @@ def serve_layout():
         ], style={"display": "none"})
     ])
 
-    som = SelfOrganizingMap()
-    store_som_in_cache(session_id, som)
-
     return res
 
 
 # App layout
 app.layout = serve_layout
 
-
-# Define a way of updating tabs of dashboard
-@app.callback(
-    Output("output-tab", "children"),
-    inputs=Input("section-selection", "active_tab"),
-    state=State("session-id", "children")
-)
-def render_tab_content(tab_id: str, session_id: str) -> html.Div:
-    """
-    Render tab content dynamically. Such an approach is recommended
-    due to the fact, that otherwise content for all tabs would be
-    generated at the same moment, which could cause a performance
-    issues.
-
-    :param tab_id: id of tab to show
-    :param session_id: session id
-    """
-    if tab_id == "som-setup-and-results":
-        som = get_som_from_cache(session_id)
-        return render_som_setup_and_results_div(som)
-    if tab_id == "about-learning-params":
-        return render_about_learning_params_tab()
-
-
 get_callbacks(app)
 
-
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=debug, host="0.0.0.0", port=8050)

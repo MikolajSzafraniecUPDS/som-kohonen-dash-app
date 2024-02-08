@@ -163,4 +163,4 @@ cython_debug/
 notes/
 
 # Cache dir
-cache/
+som-app/cache/

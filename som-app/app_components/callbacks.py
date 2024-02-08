@@ -99,7 +99,6 @@ def get_callbacks(app: Dash) -> None:
         :param session_id: id of current session
         :param session_id: id of current session
         """
-        print("Launched update_button_status callback")
         som = get_som_from_cache(session_id)
         size_same = som_size == som.size
         alpha_channel_same = include_alpha_channel == som.include_alpha_channel
@@ -192,7 +191,6 @@ def get_callbacks(app: Dash) -> None:
         :param alpha_channel_range: alpha channel of red component
         :param session_id: id of current session
         """
-        print("Launched update_network callback")
         som = get_som_from_cache(session_id)
         current_size = som.size
         current_alpha_channel_indicator = som.include_alpha_channel
@@ -255,7 +253,6 @@ def get_callbacks(app: Dash) -> None:
 
         :param update_network_btn_disabled: is 'update-network-btn' disabled
         """
-        print("Launched buttons_disabled_enabled callback")
         reset_settings_disabled = update_network_btn_disabled
         learn_reset_network_btns_disabled = not update_network_btn_disabled
         return reset_settings_disabled, learn_reset_network_btns_disabled, learn_reset_network_btns_disabled
@@ -285,7 +282,6 @@ def get_callbacks(app: Dash) -> None:
         :param n_clicks: how many times reset button was clicked
         :param session_id: id of current session
         """
-        print("Launched reset_settings_changes callback")
         som = get_som_from_cache(session_id)
         som_size = som.size
         som_alpha_channel_indicator = som.include_alpha_channel
@@ -328,7 +324,6 @@ def get_callbacks(app: Dash) -> None:
         :param n_clicks: how many times reset button was clicked
         :param session_id: id of current session
         """
-        print("Launched reset_network callback")
         som = get_som_from_cache(session_id)
         som.reset_network()
         store_som_in_cache(session_id, som)
@@ -348,7 +343,6 @@ def get_callbacks(app: Dash) -> None:
         :param n_clicks: how many times reset button was clicked
         :param session_id: id of current session
         """
-        print("Launched clear_cache callback")
         rm_som_from_cache(session_id)
         return "File removed"
 
@@ -410,7 +404,6 @@ def get_callbacks(app: Dash) -> None:
         :param number_of_iterations: number of learning iterations
         :param img_refresh_rate: refresh rate of image
         """
-        print("Launched learn_network callback")
         som = get_som_from_cache(session_id)
         number_of_iterations = int(number_of_iterations)
         img_refresh_rate = int(img_refresh_rate)
@@ -504,7 +497,6 @@ def get_callbacks(app: Dash) -> None:
         :param alpha_channel_range: alpha channel of red component
         :param session_id: id of current session
         """
-        print("I'm in interrupt learning callback!")
         rgba_low = (
             red_range[0],
             green_range[0],
