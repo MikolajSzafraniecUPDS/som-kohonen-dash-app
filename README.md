@@ -9,7 +9,14 @@ You can launch the application directly using python script or deploy it with a 
 container.
 
 ## Python script
-As a first step change directory to the *som-app*:
+As a first step install required python packages (it is good idea to set up virtual 
+environment before running this line):
+
+```shell
+pip install -r requirements.txt
+```
+
+Change directory to the *som-app*:
 
 ```shell
 cd som-app
