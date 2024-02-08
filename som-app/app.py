@@ -38,9 +38,13 @@ app = Dash(
 
 if env_type == "local":
     debug = True
-else:
+elif env_type == "docker_env":
     debug = False
     server = app.server
+else:
+    raise ValueError(
+        "Name of environment {0} is not valid".format(env_type)
+    )
 
 
 
