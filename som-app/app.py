@@ -47,9 +47,11 @@ else:
     )
 
 
-
 def serve_layout():
     session_id = str(uuid.uuid4())
+
+    som = SelfOrganizingMap()
+    store_som_in_cache(session_id, som)
 
     res = html.Div([
         html.Div(session_id, id="session-id", className="hidden-component"),
@@ -59,8 +61,8 @@ def serve_layout():
             id="section-selection",
             active_tab="som-setup-and-results",
             children=[
-                dbc.Tab(label="SOM learning", tab_id="som-setup-and-results"),
-                dbc.Tab(label="Tutorial", tab_id="about-learning-params")
+                dbc.Tab(render_som_setup_and_results_div(som), label="SOM learning", tab_id="som-setup-and-results"),
+                dbc.Tab(render_about_learning_params_tab(), label="Tutorial", tab_id="about-learning-params")
             ]
         ),
         html.Div(id="output-tab"),
@@ -70,38 +72,11 @@ def serve_layout():
         ], style={"display": "none"})
     ])
 
-    som = SelfOrganizingMap()
-    store_som_in_cache(session_id, som)
-
     return res
 
 
 # App layout
 app.layout = serve_layout
-
-
-# Define a way of updating tabs of dashboard
-@app.callback(
-    Output("output-tab", "children"),
-    inputs=Input("section-selection", "active_tab"),
-    state=State("session-id", "children")
-)
-def render_tab_content(tab_id: str, session_id: str) -> html.Div:
-    """
-    Render tab content dynamically. Such an approach is recommended
-    due to the fact, that otherwise content for all tabs would be
-    generated at the same moment, which could cause a performance
-    issues.
-
-    :param tab_id: id of tab to show
-    :param session_id: session id
-    """
-    if tab_id == "som-setup-and-results":
-        som = get_som_from_cache(session_id)
-        return render_som_setup_and_results_div(som)
-    if tab_id == "about-learning-params":
-        return render_about_learning_params_tab()
-
 
 get_callbacks(app)
 
