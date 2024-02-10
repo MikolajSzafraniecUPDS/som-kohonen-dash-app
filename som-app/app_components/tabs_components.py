@@ -54,7 +54,8 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                                         }
                                     )
                                 ],
-                                width=9
+                                width=12,
+                                lg=9
                             ),
                             dbc.Col([
                                 dbc.Label("Refresh rate:"),
@@ -74,32 +75,46 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                 html.Div([
                     dbc.Row([
                         dbc.Col([
-                            html.Div([
-                                dbc.Button(
-                                    "Run learning",
-                                    id="run-learning-btn",
-                                    color="success",
-                                    className="me-1",
-                                    disabled=False
-                                ),
-                                dbc.Button(
-                                    "Reset network",
-                                    id="reset-som-btn",
-                                    color="warning",
-                                    className="me-1"
-                                ),
-                                dbc.Button(
-                                    "Stop learning",
-                                    id="stop-learning-btn",
-                                    color="danger",
-                                    className="me-1",
-                                    disabled=True
-                                )
-                            ])
-                        ], width=9),
+                            dbc.Button(
+                                "Run learning",
+                                id="run-learning-btn",
+                                color="success",
+                                className="me-1",
+                                disabled=False
+                            ),
+                        ],
+                            className="d-grid gap-2",
+                            lg=2,
+                            width=4
+                        ),
+                        dbc.Col([
+                            dbc.Button(
+                                "Reset network",
+                                id="reset-som-btn",
+                                color="warning",
+                                className="me-1"
+                            )
+                        ],
+                            className="d-grid gap-2",
+                            lg=2,
+                            width=4
+                        ),
+                        dbc.Col([
+                            dbc.Button(
+                                "Stop learning",
+                                id="stop-learning-btn",
+                                color="danger",
+                                className="me-1",
+                                disabled=True
+                            )
+                        ],
+                            className="d-grid gap-2",
+                            lg=2,
+                            width=4
+                        ),
                         dbc.Col([
                             html.Div([
-                                dbc.Label("Learning progress"),
+                                dbc.Label("Learning progress", className="text-align-center"),
                                 dbc.Progress(
                                     value=0, id="learning-progress-bar"
                                 )
@@ -107,19 +122,25 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                                 id="learning-progress-div",
                                 className="hidden-component"
                             )
-                        ])
+                        ],
+                            lg=3,
+                            width=8
+                        )
                     ],
                         justify="center",
                         align="center"
                     ),
                 ],
-                    className="learning-specification"
+                    className="text-align-center"
                 )
-            ]),
+            ],
+                lg=6,
+                width=12
+            ),
             dbc.Col(
                 [
                     html.Div([
-                        html.H2("SOM parameters"),
+                        html.H2("SOM parameters", className="text-align-center"),
                         html.P(
                             """
                             Set of parameters defining Kohonen network (size, whether to include
@@ -190,26 +211,42 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                             }
                         ),
                         html.Br(),
-                        html.Div([
-                            dbc.Row([
-                                dbc.Col([
-                                    dbc.Label("Neighbourhood type"),
-                                    dbc.Select(
-                                        [option.value for option in NeighbourhoodType],
-                                        value="Gaussian",
-                                        id="neighbourhood-type"
-                                    )
-                                ]),
-                                dbc.Col([
-                                    dbc.Label("Decay function for learning rate"),
-                                    dbc.Select(
-                                        [option.value for option in LearningRateDecay],
-                                        value="Inverse of time",
-                                        id="learning-rate-decay-func"
-                                    )
-                                ])
-                            ])
-                        ], style={"width": "60%"}),
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label("Neighbourhood type")
+                            ],
+                                lg=4,
+                                width=6
+                            ),
+                            dbc.Col([
+                                dbc.Label("Decay function for learning rate")
+                            ],
+                                lg=4,
+                                width=6
+                            )
+                        ]),
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Select(
+                                    [option.value for option in NeighbourhoodType],
+                                    value="Gaussian",
+                                    id="neighbourhood-type"
+                                )
+                            ],
+                                lg=4,
+                                width=6
+                            ),
+                            dbc.Col([
+                                dbc.Select(
+                                    [option.value for option in LearningRateDecay],
+                                    value="Inverse of time",
+                                    id="learning-rate-decay-func"
+                                )
+                            ],
+                                lg=4,
+                                width=6
+                            )
+                        ]),
                         html.Br(),
                         html.Div([
                             dbc.Checkbox(
@@ -289,9 +326,12 @@ def render_som_setup_and_results_div(som: SelfOrganizingMap) -> html.Div:
                             )
                         ])
                     ])
-                ]
+                ],
+                width=12,
+                lg=6
             )
-        ])
+        ]),
+        html.Br()
     ])
 
     return res
@@ -366,7 +406,8 @@ def render_about_learning_params_tab() -> html.Div:
                     )
                 ],
                     className="text-align-center",
-                    width=4
+                    lg=4,
+                    width=6
                 ),
                 dbc.Col([
                     dbc.Label(
@@ -379,7 +420,8 @@ def render_about_learning_params_tab() -> html.Div:
                     )
                 ],
                     className="text-align-center",
-                    width=4
+                    lg=4,
+                    width=6
                 )
             ],
                 justify="evenly"
@@ -397,7 +439,8 @@ def render_about_learning_params_tab() -> html.Div:
                     )
                 ],
                     className="text-align-center",
-                    width=4
+                    lg=4,
+                    width=6
                 ),
                 dbc.Col([
                     dbc.Label(
@@ -410,7 +453,8 @@ def render_about_learning_params_tab() -> html.Div:
                     )
                 ],
                     className="text-align-center",
-                    width=4
+                    lg=4,
+                    width=6
                 )
             ],
                 justify="evenly"
@@ -454,7 +498,8 @@ def render_about_learning_params_tab() -> html.Div:
                         className="tutorial-image-screen"
                     )
                 ],
-                    width=7
+                    lg=7,
+                    width=12
                 )
             ],
                 justify="center"
@@ -478,7 +523,8 @@ def render_about_learning_params_tab() -> html.Div:
                         className="tutorial-image-screen"
                     )
                 ],
-                    width=7
+                    lg=7,
+                    width=12
                 )
             ],
                 justify="center"
@@ -503,7 +549,8 @@ def render_about_learning_params_tab() -> html.Div:
                         className="tutorial-image-screen"
                     )
                 ],
-                    width=7
+                    lg=7,
+                    width=12
                 )
             ],
                 justify="center"
@@ -527,7 +574,8 @@ def render_about_learning_params_tab() -> html.Div:
                         className="tutorial-image-screen"
                     )
                 ],
-                    width=8
+                    lg=8,
+                    width=12
                 )
             ],
                 justify="center"
@@ -550,7 +598,8 @@ def render_about_learning_params_tab() -> html.Div:
                         className="tutorial-image-screen"
                     )
                 ],
-                    width=8
+                    lg=8,
+                    width=12
                 )
             ],
                 justify="center"
@@ -574,7 +623,8 @@ def render_about_learning_params_tab() -> html.Div:
                         className="tutorial-image-screen"
                     )
                 ],
-                    width=8
+                    lg=8,
+                    width=12
                 )
             ],
                 justify="center"
@@ -611,7 +661,8 @@ def render_about_learning_params_tab() -> html.Div:
                                         className="tutorial-image-screen"
                                     )
                                 ],
-                                    width=9
+                                    lg=9,
+                                    width=12
                                 )
                             ],
                                 justify="center"
@@ -636,7 +687,8 @@ def render_about_learning_params_tab() -> html.Div:
                                         className="tutorial-image-screen"
                                     )
                                 ],
-                                    width=3
+                                    lg=3,
+                                    width=6
                                 )
                             ],
                                 justify="center"
@@ -663,7 +715,8 @@ def render_about_learning_params_tab() -> html.Div:
                                         className="tutorial-image-screen"
                                     )
                                 ],
-                                    width=9
+                                    lg=9,
+                                    width=12
                                 )
                             ],
                                 justify="center"
@@ -691,7 +744,8 @@ def render_about_learning_params_tab() -> html.Div:
                                         className="tutorial-image-screen"
                                     )
                                 ],
-                                    width=9
+                                    lg=9,
+                                    width=12
                                 )
                             ],
                                 justify="center"
@@ -722,7 +776,8 @@ def render_about_learning_params_tab() -> html.Div:
                                         className="tutorial-image-screen"
                                     )
                                 ],
-                                    width=4
+                                    lg=4,
+                                    width=8
                                 )
                             ],
                                 justify="center"
@@ -750,7 +805,8 @@ def render_about_learning_params_tab() -> html.Div:
                                         className="tutorial-image-screen"
                                     )
                                 ],
-                                    width=4
+                                    lg=4,
+                                    width=8
                                 )
                             ],
                                 justify="center"
@@ -778,7 +834,8 @@ def render_about_learning_params_tab() -> html.Div:
                                         className="tutorial-image-screen"
                                     )
                                 ],
-                                    width=8
+                                    lg=8,
+                                    width=12
                                 )
                             ],
                                 justify="center"
@@ -802,7 +859,8 @@ def render_about_learning_params_tab() -> html.Div:
                                         className="tutorial-image-screen"
                                     )
                                 ],
-                                    width=8
+                                    lg=8,
+                                    width=12
                                 )
                             ],
                                 justify="center"
@@ -827,7 +885,8 @@ def render_about_learning_params_tab() -> html.Div:
                                         className="tutorial-image-screen"
                                     )
                                 ],
-                                    width=4
+                                    lg=4,
+                                    width=8
                                 )
                             ],
                                 justify="center"
@@ -887,8 +946,11 @@ def render_about_learning_params_tab() -> html.Div:
             ]),
             html.Br()
         ],
-            width={
+            lg={
                 "size": 8, "offset": 1
+            },
+            width={
+                "size": 12, "offset": 1
             }
         )
     ])
